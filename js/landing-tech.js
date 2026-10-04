@@ -66,7 +66,7 @@
                     h: "Атака: увести деньги одной подписью",
                     p: "Создаём в мультисиге ордер на весь баланс и подписываем своим кошельком.",
                     fail: "Одной подписи недостаточно",
-                    why: "Порог задаётся при создании контракта и после этого неизменяем. Пока не набрано нужное число подписей, ордер просто ждёт. Ключа платформы среди подписантов нет вообще — Tonix не может ни создать перевод, ни подтвердить чужой."
+                    why: "Порог задаётся при создании контракта. Изменить его можно только ордером, который одобрят сами подписанты по текущему порогу. Пока не набрано нужное число подписей, ордер просто ждёт. Ключа платформы среди подписантов нет вообще — Tonix не может ни создать перевод, ни подтвердить чужой."
                 },
                 {
                     tab: "Размножить кошельки",
@@ -171,7 +171,7 @@
                     h: "Attack: move funds with one signature",
                     p: "Create an order in the multisig for the whole balance and sign it with your wallet.",
                     fail: "One signature is not enough",
-                    why: "The threshold is fixed when the contract is created and cannot be changed afterwards. Until enough signatures are collected the order simply waits. The platform's key is not among the signers at all — Tonix can neither create a transfer nor approve one."
+                    why: "The threshold is set when the contract is created. It can only be changed by an order approved by the signers themselves under the current threshold. Until enough signatures are collected the order simply waits. The platform's key is not among the signers at all — Tonix can neither create a transfer nor approve one."
                 },
                 {
                     tab: "Multiply wallets",

@@ -52,7 +52,7 @@
                     "На этой вкладке нажми «Проверить перевод». Платформа найдёт транзакцию в блокчейне и отметит решение исполненным со ссылкой на неё. Отметка вручную остаётся на случай, когда перевод сделан иначе, и видна всем как непроверенная."]
             },
             gas: "Держи на мультисиге небольшой запас TON: он тратится на создание и исполнение ордера даже при переводе токена. Без запаса контракт не отправит ничего.",
-            forever: "Подписанты и порог заданы при создании контракта навсегда. Сид-фразы храни офлайн: потеря доступа к нужному числу кошельков означает потерю казны."
+            forever: "Подписанты и порог задаются при создании контракта. Изменить их можно только отдельным ордером, который одобрит нужное число текущих подписантов; платформа сделать это не может. Сид-фразы храни офлайн: потеря доступа к нужному числу кошельков означает потерю казны."
         },
         en: {
             head: "How signers move the money",
@@ -85,7 +85,7 @@
                     "Press «Verify transfer» on this tab. The platform finds the transaction on-chain and marks the decision executed with a link. Manual marking stays for other cases and is shown to everyone as unverified."]
             },
             gas: "Keep a small TON reserve in the multisig: creating and executing an order costs TON even for token transfers. With none left the contract cannot send anything.",
-            forever: "Signers and threshold are fixed when the contract is created. Keep seed phrases offline: losing access to enough wallets means losing the treasury."
+            forever: "Signers and threshold are set when the contract is created. They can only be changed by a separate order approved by the required number of current signers; the platform cannot change them. Keep seed phrases offline: losing access to enough wallets means losing the treasury."
         }
     };
 
