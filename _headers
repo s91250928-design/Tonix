@@ -1,0 +1,62 @@
+# Cloudflare Pages Headers Configuration
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# Этот файл нужно положить в корень проекта (рядом с index.html)
+# Cloudflare применит эти заголовки автоматически после деплоя
+
+/*
+  # === XSS PROTECTION ===
+  # Content Security Policy - whitelist'ит только нужные ресурсы
+  # Любые попытки выполнить inline-script или fetch с чужих доменов будут заблокированы
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://challenges.cloudflare.com https://static.cloudflareinsights.com https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://*.supabase.co; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://static.cloudflareinsights.com wss://*.supabase.co https://*.supabase.co https://api.coingecko.com https://toncenter.com https://testnet.toncenter.com https://challenges.cloudflare.com https://tonapi.io https://*.tonapi.io https://bridge.tonapi.io https://*.tonkeeper.com https://*.mytonwallet.io https://*.okx.com https://web3.okx.com https://bridge.ton.space https://api.qrserver.com https://raw.githubusercontent.com https://config.ton.org https://analytics.ton.org https://ton-connect-bridge.bgwapi.io https://wallet.binance.com https://app.binance.com https://www.binance.com https://public.bnbstatic.com https://*.mytonwallet.org https://connect.tonhubapi.com https://wallet-bridge.fintopio.com https://bridge.dewallet.pro https://*.uxuy.me https://tc.architecton.su https://sse-bridge.hot-labs.org https://ton-bridge.safepal.com https://translate.googleapis.com https://api.mymemory.translated.net; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; object-src 'none'
+  
+  # === CLICKJACKING PROTECTION ===
+  # Раньше здесь стоял X-Frame-Options: DENY — он запрещал встраивать сайт
+  # в iframe вообще. Из-за этого Mini App не открывался в Telegram Web на ПК:
+  # там приложение показывается именно в iframe (на телефоне — нативный webview,
+  # поэтому телефон работал). Заголовок убран, защита теперь целиком на
+  # frame-ancestors в CSP выше: встраивать может только сам сайт и Telegram,
+  # для всех остальных доменов запрет остаётся.
+  
+  # === MIME SNIFFING ===
+  # Уже работает, но дублируем для надёжности
+  X-Content-Type-Options: nosniff
+  
+  # === REFERRER POLICY ===
+  # Уже работает, дублируем
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # === HSTS ===
+  # Принуждает браузер использовать только HTTPS на 2 года + включает в preload list
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  
+  # === PERMISSIONS POLICY ===
+  # Запрещаем все API кроме нужных (камера и микрофон для звонков)
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  
+  # === CROSS-ORIGIN POLICIES ===
+  # Изолируем сайт от других origin'ов для max security
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: same-origin
+
+# === НЕ КЭШИРОВАТЬ HTML ===
+# index.html и корень всегда берутся свежими — иначе браузер (особенно iOS Safari)
+# держит старую версию приложения и не видит обновлений.
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# === СКРИПТЫ: ВСЕГДА СВЕРЯТЬСЯ С СЕРВЕРОМ ===
+# Без этого правила Cloudflare отдавал старые js/*.js: HTML обновлялся,
+# а логика оставалась прежней, и исправления не доезжали до людей.
+# no-cache не значит «качать заново каждый раз» — браузер спрашивает сервер
+# и получает короткий ответ «не изменилось», если файл тот же.
+/js/*
+  Cache-Control: no-cache, must-revalidate
+
+# === НЕ КЭШИРОВАТЬ Service Worker ===
+# sw.js должен всегда обновляться, иначе старая логика залипает
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate

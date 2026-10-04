@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Quantum Messenger</title>
+<link rel="icon" href="/icon-192.png">
+<style>
+  :root { --bg:#0e0f12; --card:#16171a; --text:#e8ecf2; --sec:#9aa0a8; --accent:#5aa0ff; --border:rgba(255,255,255,0.08); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Manrope',-apple-system,'Segoe UI',sans-serif; line-height:1.65; padding:40px 18px 80px; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-family:Georgia,'Times New Roman',serif; font-size:30px; font-weight:600; margin-bottom:6px; }
+  .sub { color:var(--sec); font-size:13px; margin-bottom:34px; }
+  h2 { font-family:Georgia,serif; font-size:19px; font-weight:600; margin:30px 0 10px; color:var(--text); }
+  p, li { color:var(--sec); font-size:14.5px; margin-bottom:10px; }
+  ul { padding-left:20px; margin-bottom:10px; }
+  b { color:var(--text); font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:26px 28px; margin-bottom:26px; }
+  .lang-divider { text-align:center; margin:46px 0 30px; color:var(--accent); font-size:12px; letter-spacing:2px; text-transform:uppercase; border-top:1px solid var(--border); padding-top:30px; }
+  a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Privacy Policy</h1>
+  <div class="sub">Quantum Messenger · Last updated: June 11, 2026</div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">1. Overview</h2>
+    <p>Quantum Messenger ("the App") is an end-to-end encrypted messenger built on the TON ecosystem. Privacy is the core of the product: <b>we cannot read your messages</b>, we show no ads, and we never sell user data.</p>
+
+    <h2>2. End-to-End Encryption</h2>
+    <p>All personal and group messages are encrypted on your device using <b>AES-256-GCM</b> with <b>ECDH P-256</b> key exchange (Sender Keys protocol for groups). Encryption keys are generated and stored only on your device. Our servers store and relay <b>ciphertext only</b> — we have no technical ability to decrypt message content.</p>
+
+    <h2>3. Data We Store</h2>
+    <ul>
+      <li><b>Account data:</b> a random user ID, your chosen display name, avatar, and language preference.</li>
+      <li><b>Encrypted messages and media:</b> stored in encrypted form to deliver them to recipients.</li>
+      <li><b>TON wallet address (optional):</b> if you connect a TON wallet via TON Connect, we store its public address to compute your public reputation tier. Wallet addresses are public blockchain data. We never receive your seed phrase or private keys.</li>
+      <li><b>Reputation data:</b> trust votes given and received between users.</li>
+    </ul>
+
+    <h2>4. Data We Do NOT Collect</h2>
+    <ul>
+      <li>No phone number or email is required to use the App.</li>
+      <li>No advertising identifiers, no trackers, no analytics SDKs.</li>
+      <li>No location data, no contact-list upload.</li>
+      <li>No reading or analysis of message content (technically impossible due to E2E encryption).</li>
+    </ul>
+
+    <h2>5. Third-Party Services</h2>
+    <ul>
+      <li><b>Supabase</b> — backend infrastructure (database, realtime delivery of encrypted payloads).</li>
+      <li><b>Cloudflare</b> — hosting and security (including Turnstile anti-bot protection).</li>
+      <li><b>TON Connect / TON API</b> — wallet connection and public on-chain data (balance tier, activity, scam flags) used for reputation.</li>
+      <li><b>Translation services</b> (Google Translate endpoint / MyMemory) — only when you explicitly tap "Translate" on a message; only that message text is sent for translation.</li>
+    </ul>
+
+    <h2>6. Calls</h2>
+    <p>Voice and video calls use peer-to-peer WebRTC with encrypted media streams (DTLS-SRTP). Call content is not recorded or stored.</p>
+
+    <h2>7. Data Retention & Deletion</h2>
+    <p>You can delete individual messages and chats at any time. You can also permanently delete your entire account directly in the App, which removes your associated account and server data. If you need any help, you can also contact us at the address below.</p>
+
+    <h2>8. Your Content & Your Responsibility</h2>
+    <p>Quantum Messenger is a communication tool and acts only as an intermediary that transmits and stores encrypted content between users. Because of end-to-end encryption, we cannot see, monitor, or moderate the content you send or receive. You are solely responsible for the content you share and for how you use the App, and you agree to use it in compliance with all applicable laws. To the maximum extent permitted by law, we accept no liability for content transmitted by users or for any consequences arising from your use of the App.</p>
+
+    <h2>9. Children</h2>
+    <p>The App is not directed at children under 13 (or the minimum age in your jurisdiction).</p>
+
+    <h2>10. Changes</h2>
+    <p>We may update this policy; the latest version is always available at this page.</p>
+
+    <h2>11. Contact</h2>
+    <p>Questions and deletion requests: <b>support@quantum-messenger.net</b></p>
+  </div>
+
+  <div class="lang-divider">Русская версия</div>
+
+  <h1>Политика конфиденциальности</h1>
+  <div class="sub">Quantum Messenger · Обновлено: 11 июня 2026</div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">1. Кратко</h2>
+    <p>Quantum Messenger («Приложение») — мессенджер со сквозным шифрованием на базе экосистемы TON. Приватность — ядро продукта: <b>мы не можем читать ваши сообщения</b>, не показываем рекламу и никогда не продаём данные пользователей.</p>
+
+    <h2>2. Сквозное шифрование</h2>
+    <p>Все личные и групповые сообщения шифруются на вашем устройстве: <b>AES-256-GCM</b> с обменом ключами <b>ECDH P-256</b> (протокол Sender Keys для групп). Ключи создаются и хранятся только на вашем устройстве. Серверы хранят и передают <b>только шифротекст</b> — у нас нет технической возможности расшифровать содержимое.</p>
+
+    <h2>3. Какие данные мы храним</h2>
+    <ul>
+      <li><b>Аккаунт:</b> случайный ID, выбранное вами имя, аватар, язык интерфейса.</li>
+      <li><b>Зашифрованные сообщения и медиа:</b> в зашифрованном виде, для доставки получателям.</li>
+      <li><b>Адрес TON-кошелька (по желанию):</b> при подключении через TON Connect мы храним публичный адрес для расчёта репутационного статуса. Адрес кошелька — публичные данные блокчейна. Сид-фразу и приватные ключи мы не получаем никогда.</li>
+      <li><b>Репутация:</b> оценки доверия между пользователями.</li>
+    </ul>
+
+    <h2>4. Что мы НЕ собираем</h2>
+    <ul>
+      <li>Телефон и email для использования не требуются.</li>
+      <li>Нет рекламных идентификаторов, трекеров и аналитических SDK.</li>
+      <li>Нет геолокации, нет загрузки списка контактов.</li>
+      <li>Содержимое сообщений не читается и не анализируется (технически невозможно из-за E2E).</li>
+    </ul>
+
+    <h2>5. Сторонние сервисы</h2>
+    <ul>
+      <li><b>Supabase</b> — серверная инфраструктура (база данных, доставка зашифрованных сообщений).</li>
+      <li><b>Cloudflare</b> — хостинг и защита (включая антибот Turnstile).</li>
+      <li><b>TON Connect / TON API</b> — подключение кошелька и публичные ончейн-данные (статус по балансу, активность, флаги скама) для репутации.</li>
+      <li><b>Сервисы перевода</b> (Google Translate / MyMemory) — только когда вы сами нажимаете «Перевести»; отправляется только текст этого сообщения.</li>
+    </ul>
+
+    <h2>6. Звонки</h2>
+    <p>Аудио- и видеозвонки идут напрямую между устройствами (WebRTC) с шифрованием потоков (DTLS-SRTP). Содержимое звонков не записывается и не хранится.</p>
+
+    <h2>7. Хранение и удаление</h2>
+    <p>Сообщения и чаты можно удалять в любой момент. Вы также можете полностью удалить свой аккаунт прямо в приложении — связанные данные аккаунта и серверные данные при этом удаляются. При необходимости можно также написать нам на адрес ниже.</p>
+
+    <h2>8. Ваш контент и ваша ответственность</h2>
+    <p>Quantum Messenger — это инструмент для общения, который выступает лишь посредником, передающим и хранящим зашифрованный контент между пользователями. Из-за сквозного шифрования мы не можем видеть, отслеживать или модерировать то, что вы отправляете или получаете. Вы несёте полную ответственность за контент, которым делитесь, и за то, как используете Приложение, и обязуетесь использовать его в соответствии с применимым законодательством. В максимальной степени, допустимой законом, мы не несём ответственности за контент, передаваемый пользователями, и за любые последствия использования вами Приложения.</p>
+
+    <h2>9. Дети</h2>
+    <p>Приложение не предназначено для детей младше 13 лет (или минимального возраста в вашей юрисдикции).</p>
+
+    <h2>10. Изменения</h2>
+    <p>Политика может обновляться; актуальная версия всегда доступна на этой странице.</p>
+
+    <h2>11. Контакт</h2>
+    <p>Вопросы и запросы на удаление: <b>support@quantum-messenger.net</b></p>
+  </div>
+
+</div>
+</body>
+</html>
