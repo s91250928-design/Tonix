@@ -52,6 +52,19 @@ function normAddr(a: string | null | undefined): string {
     }
 }
 
+/* Сумма токена в самых мелких единицах — строками, без умножения
+   (так же, как в entry-fee.js): 0.1 * 10^9 в двоичной арифметике
+   даёт мусорный хвост, а здесь это порог, по которому открывается вход. */
+function toUnits(amount: unknown, decimals: number): bigint | null {
+    let s = String(amount ?? "").trim();
+    if (!s) return null;
+    if (/e/i.test(s)) s = Number(s).toFixed(decimals);
+    if (!/^\d+(\.\d+)?$/.test(s)) return null;
+    const [whole, frac0 = ""] = s.split(".");
+    const frac = (frac0 + "0".repeat(decimals)).slice(0, decimals);
+    try { return BigInt((whole + frac).replace(/^0+(?=\d)/, "")); } catch { return null; }
+}
+
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
     if (req.method !== "POST") return reply({ paid: false, error: "method" }, 405);
@@ -90,7 +103,7 @@ Deno.serve(async (req) => {
 
     /* --- 4. Настоящие условия входа: из базы, не из браузера --- */
     const { data: st } = await admin.from("dao_settings")
-        .select("entry_type,entry_fee_ton").eq("dao_key", daoKey).limit(1).maybeSingle();
+        .select("entry_type,entry_fee_ton,fee_jetton,fee_decimals").eq("dao_key", daoKey).limit(1).maybeSingle();
     if (!st || st.entry_type !== "fee") return reply({ paid: false, reason: "not-fee" });
     const feeTon = Number(st.entry_fee_ton);
     if (!(feeTon > 0)) return reply({ paid: false, reason: "bad-fee" });
@@ -108,7 +121,77 @@ Deno.serve(async (req) => {
     const sender = normAddr(w.wallet_address);
     const since = Math.floor(new Date(tick.requested_at).getTime() / 1000) - 90; // запас на расхождение часов
 
-    /* --- 7. История входящих переводов мультисига --- */
+    /* --- 7а. Взнос токеном (Jetton). Перевод токена приходит в казну не как
+              TON, а как jetton transfer на кошелёк токена казны, поэтому его
+              ищем отдельно — в истории jetton-переводов, где получатель —
+              казна, отправитель — кошелёк человека, токен — тот, что задан
+              в условиях DAO. --- */
+    if (st.fee_jetton) {
+        const dec = Number.isInteger(Number(st.fee_decimals)) ? Number(st.fee_decimals) : 9;
+        const need = toUnits(st.entry_fee_ton, dec);
+        if (need === null || need <= 0n) return reply({ paid: false, reason: "bad-fee" });
+
+        const jBase = dao.testnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
+        const jApi = `${jBase}/api/v3/jetton/transfers?owner_address=${encodeURIComponent(dao.treasury_address)}` +
+            `&jetton_master=${encodeURIComponent(st.fee_jetton)}&direction=in&start_utime=${since}&limit=100&sort=desc`;
+
+        let transfers: any[] = [];
+        try {
+            const key = Deno.env.get("TONCENTER_API_KEY");
+            const r = await fetch(jApi, key ? { headers: { "X-API-Key": key } } : undefined);
+            if (!r.ok) return reply({ paid: false, reason: "chain-unavailable" });
+            const j = await r.json();
+            transfers = j?.jetton_transfers || [];
+        } catch {
+            return reply({ paid: false, reason: "chain-unavailable" });
+        }
+
+        const treasury = normAddr(dao.treasury_address);
+        const master = normAddr(st.fee_jetton);
+        let gotUnits = 0n;
+        let jHash = "";
+        for (const t of transfers) {
+            if (t?.transaction_aborted) continue;                       // неуспешный перевод не считается
+            if (Number(t?.transaction_now || 0) < since) continue;
+            if (normAddr(t?.source) !== sender) continue;               // от кошелька этого человека
+            if (normAddr(t?.destination) !== treasury) continue;        // именно в казну
+            if (normAddr(t?.jetton_master) !== master) continue;        // именно нужный токен
+            let amt: bigint;
+            try { amt = BigInt(String(t?.amount ?? "0")); } catch { continue; }
+            if (amt <= 0n) continue;
+            gotUnits += amt;
+            if (!jHash) jHash = String(t?.transaction_hash || "");
+        }
+
+        if (gotUnits < need) {
+            return reply({
+                paid: false, reason: "not-enough", jetton: true,
+                needed_units: need.toString(), received_units: gotUnits.toString(),
+            });
+        }
+
+        if (jHash) {
+            const { data: dupJ } = await admin.from("dao_entry_payments")
+                .select("id").eq("tx_hash", jHash).eq("status", "paid").limit(1).maybeSingle();
+            if (dupJ) return reply({ paid: false, reason: "tx-reused" });
+        }
+
+        /* paid_ton для токенного взноса хранит сумму в токенах */
+        const gotTokens = Number(gotUnits) / Math.pow(10, dec);
+        const { error: jErr } = await admin.from("dao_entry_payments")
+            .update({
+                status: "paid",
+                paid_ton: gotTokens,
+                tx_hash: jHash || null,
+                confirmed_at: new Date().toISOString(),
+            })
+            .eq("id", tick.id).eq("status", "pending");
+        if (jErr) return reply({ paid: false, reason: "save-failed", detail: jErr.message });
+
+        return reply({ paid: true, jetton: true, received: gotTokens, needed: Number(st.entry_fee_ton) });
+    }
+
+    /* --- 7. История входящих переводов мультисига (взнос в TON) --- */
     const base = dao.testnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
     const api = `${base}/api/v2/getTransactions?address=${encodeURIComponent(dao.treasury_address)}&limit=60&archival=true`;
 
