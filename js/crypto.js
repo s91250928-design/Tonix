@@ -1,9 +1,9 @@
 /* =====================================================
    TONIX — crypto.js
-   Кодирование сообщений чата (перенесено из Quantum Messenger).
+   Кодирование сообщений чата.
 
    ВАЖНО: это НЕ сквозное (E2E) шифрование. Ключ выводится из id чата
-   (chatId + '_quantum_e2e' — имя оставлено ради совместимости со старыми
+   (chatId + суффикс — он не меняется ради совместимости со старыми
    сообщениями), поэтому кодирование лишь скрывает текст от случайного
    взгляда. Защиту чата обеспечивают права доступа в базе (RLS).
 
@@ -13,7 +13,7 @@
    сообщений, отправленных до его входа.
    ===================================================== */
 
-// Шифрование данных (UTF-8 safe) — 1:1 из Quantum
+// Кодирование данных (UTF-8 safe)
 function simpleEncrypt(data, key) {
     if (!data) return '';
     try {
@@ -36,10 +36,10 @@ function simpleEncrypt(data, key) {
     }
 }
 
-// Дешифрование данных (UTF-8 safe) — 1:1 из Quantum
+// Декодирование данных (UTF-8 safe)
 function simpleDecrypt(encryptedData, key) {
     if (!encryptedData) return '';
-    // E2E v2 данные (личные переписки Quantum) — не наш формат, пропускаем
+    // Данные в чужом формате (E2Ev2) — не наш формат, пропускаем
     if (typeof encryptedData === 'string' && encryptedData.startsWith('E2Ev2:')) return '';
     try {
         var binary = atob(encryptedData);
@@ -59,7 +59,7 @@ function simpleDecrypt(encryptedData, key) {
     }
 }
 
-// Ключ чата — как в Quantum
+// Ключ чата. Суффикс — часть формата уже сохранённых сообщений: его смена сделает их нечитаемыми
 function chatKey(chatId) {
     return chatId + '_quantum_e2e';
 }

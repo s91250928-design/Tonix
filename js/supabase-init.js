@@ -1,14 +1,13 @@
 /* =====================================================
    TONIX — supabase-init.js
    Подключение к базе + вход/регистрация/сессия.
-   Перенесено из Quantum Messenger — аккаунты общие.
 
    Требует: config.js (TONIX_CONFIG), SDK supabase-js на странице.
    ===================================================== */
 
 let sb = null;              // клиент Supabase
 let isOnlineMode = false;   // есть ли связь с базой
-let currentUID = null;      // id вошедшего пользователя (в Quantum — firebaseUID)
+let currentUID = null;      // id вошедшего пользователя
 
 // Доступ из других модулей
 try {
@@ -24,7 +23,7 @@ try {
     });
 } catch (e) { console.warn('window bind:', e.message); }
 
-// --- Инициализация клиента (настройки realtime как в Quantum) ---
+// --- Инициализация клиента (настройки realtime) ---
 function initSupabase() {
     try {
         if (typeof supabase !== 'undefined') {
@@ -61,7 +60,7 @@ async function tonixLogout() {
     } catch (e) { console.error('Выход:', e); }
 }
 
-// --- Восстановление сессии (как ensureAuth в Quantum) ---
+// --- Восстановление сессии ---
 async function ensureAuth() {
     if (currentUID) return true;
     try {

@@ -3,7 +3,7 @@
    Вход через TON-кошелёк: TON Connect → подпись (tonProof)
    → edge-функция ton-wallet-auth → сессия Supabase.
 
-   Перенесено из Quantum Messenger. Аккаунт создаётся
+   Аккаунт создаётся
    автоматически при первом входе (это делает edge-функция).
 
    Требует: config.js, supabase-init.js, SDK @tonconnect/ui.
@@ -23,7 +23,7 @@ async function initTonConnect() {
     tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
         manifestUrl: window.location.origin + '/tonconnect-manifest.json',
         buttonRootId: null,
-        // config.ton.org недоступен в ряде регионов → зеркало списка кошельков (как в Quantum)
+        // config.ton.org недоступен в ряде регионов → зеркало списка кошельков
         walletsListSource: 'https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json',
         walletsListConfiguration: {
             includeWallets: [{
@@ -80,7 +80,7 @@ async function tonixConnectWallet() {
     const ui = await initTonConnect();
     if (!ui) return { ok: false, error: 'TON Connect не готов, перезагрузите страницу' };
 
-    // Чистим мусор прошлых сессий TonConnect (фикс из Quantum)
+    // Чистим мусор прошлых сессий TonConnect
     try {
         Object.keys(localStorage)
             .filter(function (k) { return k.indexOf('ton-connect-') === 0; })
@@ -100,7 +100,7 @@ async function tonixConnectWallet() {
     return done;
 }
 
-// --- Подпись кошелька → сессия Supabase (1:1 из Quantum) ---
+// --- Подпись кошелька → сессия Supabase ---
 async function tonWalletAuth(wallet, proof) {
     try {
         if (!sb) return { ok: false, error: 'Supabase не готов' };

@@ -1,5 +1,5 @@
 /* TONIX — sw.js (kill-switch)
-   На tonix.app раньше жил Quantum Messenger со своим service worker,
+   На tonix.app раньше жило другое приложение со своим service worker,
    который кэшировал старые страницы. Этот файл встаёт на его место,
    сносит все старые кэши, снимает регистрацию и перезагружает вкладки.
    После этого пользователи видят только новый Tonix. */
@@ -11,7 +11,7 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
     e.waitUntil((async function () {
         try {
-            // 1. Удаляем все кэши старого Quantum
+            // 1. Удаляем все кэши прежнего приложения
             const keys = await caches.keys();
             await Promise.all(keys.map(function (k) { return caches.delete(k); }));
         } catch (err) { }

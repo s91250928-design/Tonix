@@ -4,7 +4,7 @@
    Меняешь здесь — работает везде.
    ===================================================== */
 
-// Supabase — та же база, что у Quantum Messenger.
+// Supabase — база данных платформы.
 // Аккаунты, чаты и гильдии общие для мессенджера и платформы.
 const TONIX_CONFIG = {
     // Сеть для авто-деплоя контрактов при создании DAO.
@@ -16,10 +16,10 @@ const TONIX_CONFIG = {
         anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZ3V2ZmtwYmJ5dmJyYWJqdnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjkzNjIsImV4cCI6MjA4NzQ0NTM2Mn0.lqRTJJlX7erVRVhtHe-S4UNYf9r7Kk8-3_9PiwpVpCI"
     },
 
-    // Storage-бакет для медиа и голосовых (тот же, что в Quantum)
+    // Storage-бакет для медиа и голосовых 
     mediaBucket: "chat-media",
 
-    // Админские UID (те же, что в Quantum)
+    // Админские UID
     admins: [
         "5517e2d5-c502-4070-b9a1-158f13948a0c", // ПК (Mexc38)
         "63896ff1-c34b-4f44-bf31-cc3a5fa424a2"  // iPhone (Tus200)
@@ -47,7 +47,7 @@ const TONIX_CONFIG = {
 };
 
 /* Как узнать chat_id гильдии:
-   1. Открой Quantum Messenger, зайди в гильдию.
+   1. Открой приложение, зайди в гильдию.
    2. В консоли браузера (F12) выполни:
       sb.from('guild_channels').select('*').eq('guild_id', 'ID_ГИЛЬДИИ').then(r => console.log(r.data))
    3. Скопируй chat_id нужного канала и вставь в daoChats выше. */

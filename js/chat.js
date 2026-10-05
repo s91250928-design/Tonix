@@ -1,9 +1,8 @@
 /* =====================================================
    TONIX — chat.js
-   Групповой чат DAO. Логика перенесена из Quantum Messenger:
+   Групповой чат DAO:
    те же таблицы (chats, user_chats, messages), тот же Storage
-   (bucket chat-media), тот же формат сообщений — чаты Tonix
-   при желании открываются и в Quantum.
+   (bucket chat-media), единый формат сообщений.
 
    Модель как у групп Telegram: без сквозного шифрования, история
    видна всем участникам; см. пояснение в crypto.js.
@@ -78,7 +77,7 @@ async function ensureDaoChat(daoKey, daoName) {
     try {
         const { data: existing } = await sb.from('chats').select('id').eq('id', chatId).maybeSingle();
         if (!existing) {
-            // Формат создания — как onlineCreateChat в Quantum
+            // Формат создания чата
             const { error } = await sb.from('chats').insert({
                 id: chatId, name: daoName || 'Tonix DAO', is_group: true,
                 participants: [currentUID], created_by: currentUID,
@@ -95,7 +94,7 @@ async function ensureDaoChat(daoKey, daoName) {
 async function joinDaoChat(chatId) {
     if (!currentUID || !chatId) return false;
     try {
-        // Связь user_chats (как в Quantum). Дубликат — не ошибка.
+        // Связь user_chats. Дубликат — не ошибка.
         const { data: link } = await sb.from('user_chats').select('user_id')
             .eq('user_id', currentUID).eq('chat_id', chatId).maybeSingle();
         if (!link) {
@@ -134,7 +133,7 @@ async function loadChatMessages(chatId, limit) {
             // Telegram-style XOR (наш формат)
             try { m = JSON.parse(simpleDecrypt(contentStr, key)); }
             catch (e2) {
-                // Старые E2E-сообщения Quantum (Sender Keys / E2Ev2) — нам не прочитать
+                // Сообщения в чужом формате (Sender Keys / E2Ev2) — нам не прочитать
                 m = { id: row.id, text: '🔒 Сообщение из старой версии', type: 'text' };
             }
         }
@@ -188,7 +187,7 @@ async function sendChatMessage(chatId, opts) {
         senderUid: currentUID
     };
 
-    // Медиа-файл → Storage (пути как в Quantum: chat_media/<chatId>/<msgId>)
+    // Медиа-файл → Storage (пути: chat_media/<chatId>/<msgId>)
     if (opts.media && opts.media.dataUrl) {
         const blob = base64ToBlob(opts.media.dataUrl);
         const path = 'chat_media/' + chatId + '/' + msgId;
@@ -236,12 +235,12 @@ async function sendChatMessage(chatId, opts) {
 
     if (!msgData.text && msgData.type === 'text') return null; // пустое
 
-    // Replay-защита — как в Quantum (метки внутри шифруемой части)
+    // Replay-защита (метки внутри кодируемой части)
     msgData._ts = Date.now();
     const nonceArr = crypto.getRandomValues(new Uint8Array(12));
     msgData._nonce = Array.from(nonceArr).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Шифруем единым ключом чата и пишем в БД (формат строки — как в Quantum)
+    // Шифруем единым ключом чата и пишем в БД 
     const encrypted = simpleEncrypt(JSON.stringify(msgData), chatKey(chatId));
     const { error: insErr } = await sb.from('messages').insert({
         id: msgId, chat_id: chatId, sender_uid: currentUID,
@@ -264,14 +263,14 @@ async function sendChatMessage(chatId, opts) {
         return null;
     }
 
-    // Превью в списке чатов (🔒 без открытого текста — как в Quantum)
+    // Превью в списке чатов (🔒 без открытого текста)
     const preview = msgData.type === 'image' ? '📷 Фото' : msgData.type === 'video' ? '🎥 Видео'
         : msgData.type === 'voice' ? '🎤 Голосовое' : msgData.type === 'file' ? '📎 Файл' : '🔒 Сообщение';
     sb.from('chats').update({
         last_message: preview, last_time: new Date().toISOString(), last_sender_uid: currentUID
     }).eq('id', chatId).then(function () { });
 
-    // Realtime-уведомление другим участникам (broadcast как в Quantum)
+    // Realtime-уведомление другим участникам (broadcast)
     try {
         sb.channel('chat-' + chatId).send({
             type: 'broadcast', event: 'new-message',
@@ -450,7 +449,7 @@ async function deleteChatMessage(chatId, msgId) {
     return { ok: true };
 }
 
-// --- Подписка на новые сообщения (broadcast-канал как в Quantum) ---
+// --- Подписка на новые сообщения (broadcast-канал) ---
 // onNew(payload) вызывается при каждом новом сообщении. Возвращает функцию отписки.
 function subscribeChat(chatId, onNew, onDel, onEdit, onPin) {
     const channel = sb.channel('chat-' + chatId);

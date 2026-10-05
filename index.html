@@ -4212,7 +4212,7 @@
 
     var W=88,fW=640,aW=360,voted=false;
     function vote(s){if(voted)return;voted=true;if(s==='y')fW+=W;else aW+=W;var tot=fW+aW,fp=Math.round(fW/tot*100);document.getElementById('fl').textContent='За · '+fp+'%';document.getElementById('al').textContent='Против · '+(100-fp)+'%';document.getElementById('bar').style.width=fp+'%';alert('Голос «'+(s==='y'?'За':'Против')+'» учтён, вес '+W+' по Trust Score');}
-    /* ===== ЖИВОЙ ЧАТ DAO (реальная база, как в Quantum) ===== */
+    /* ===== ЖИВОЙ ЧАТ DAO (реальная база) ===== */
     function tonixSafeUrl(u){u=String(u||'');return /^https?:\/\//i.test(u)?u:'';}
     /* Метка времени по-человечески: сегодня — часы, вчера — «вчера 14:20»,
        раньше — дата. Голые «14:20» на позавчерашнем сообщении сбивают с толку. */
