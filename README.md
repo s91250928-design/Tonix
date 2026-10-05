@@ -30,6 +30,10 @@ Tonix — это инструмент для токен-сообществ на 
 | `js/entry-fee.js`, `js/verify-entry-fee.ts` | Платный вход в DAO (оплата в казну DAO) и его проверка на сервере |
 | `js/config.js` | Публичные настройки (адрес базы, публичный ключ, адреса казны) |
 
+## Как устроен чат холдеров
+
+Чат работает как обычные группы в Telegram: **без сквозного (E2E) шифрования**, и вся история видна каждому участнику, включая новых. Это осознанный выбор. При сквозном шифровании в группах (Signal, WhatsApp, протокол MLS) новый участник не может прочитать сообщения, отправленные до его входа, а холдерам, которые присоединяются позже, нужна вся история решений. Доступ к чату ограничивают права в базе данных. Чат не связан с казной: средства от него никак не зависят.
+
 В `js/config.js` лежит **публичный** ключ Supabase (роль `anon`). Он и так виден любому на работающем сайте; доступ к данным ограничивают правила базы. Сервисный ключ хранится только в секретах сервера и в код не попадает.
 
 ## Контакты
@@ -55,5 +59,9 @@ You can verify this in the code:
 - **No private keys or seed phrases in the code.** Only the multisig signers can withdraw, from their own wallets.
 
 Connecting a treasury to Tonix just means entering its public address — like viewing it on Tonviewer.
+
+## Holder chat
+
+The chat works like regular Telegram groups: **no end-to-end encryption**, and the full history is visible to every member, including new ones. This is deliberate: with group E2E (Signal, WhatsApp, MLS) a new member cannot read messages sent before they joined, while holders who join later need the full decision history. Access is restricted by database rules. The chat is not connected to the treasury in any way.
 
 Bot: [@TonixDAO_bot](https://t.me/TonixDAO_bot) · Listed in [TON Apps](https://ton.app/social/tonix?id=5842)
