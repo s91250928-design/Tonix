@@ -49,7 +49,7 @@
                 exec: ["Перевод уходит сам",
                     "Как только подписей набралось столько, сколько задано порогом, контракт исполняет операцию. Отдельно «отправлять» ничего не нужно."],
                 verify: ["Вернись и подтверди в Tonix",
-                    "На этой вкладке нажми «Проверить перевод». Платформа найдёт транзакцию в блокчейне и отметит решение исполненным со ссылкой на неё. Отметка вручную остаётся на случай, когда перевод сделан иначе, и видна всем как непроверенная."]
+                    "На этой вкладке нажми «Проверить перевод». Платформа найдёт транзакцию в блокчейне и отметит решение исполненным со ссылкой на неё. Без найденной транзакции решение исполненным не отметить: если перевод не нашёлся, проверь адрес и сумму и повтори."]
             },
             gas: "Держи на мультисиге небольшой запас TON: он тратится на создание и исполнение ордера даже при переводе токена. Без запаса контракт не отправит ничего.",
             forever: "Подписанты и порог задаются при создании контракта. Изменить их можно только отдельным ордером, который одобрит нужное число текущих подписантов; платформа сделать это не может. Сид-фразы храни офлайн: потеря доступа к нужному числу кошельков означает потерю казны."
@@ -82,7 +82,7 @@
                 exec: ["The transfer goes out by itself",
                     "Once the threshold is reached the contract executes the operation. There is nothing extra to «send»."],
                 verify: ["Return and confirm in Tonix",
-                    "Press «Verify transfer» on this tab. The platform finds the transaction on-chain and marks the decision executed with a link. Manual marking stays for other cases and is shown to everyone as unverified."]
+                    "Press «Verify transfer» on this tab. The platform finds the transaction on-chain and marks the decision executed with a link. Without a transaction found on-chain a decision cannot be marked executed: if none is found, check the address and amount and retry."]
             },
             gas: "Keep a small TON reserve in the multisig: creating and executing an order costs TON even for token transfers. With none left the contract cannot send anything.",
             forever: "Signers and threshold are set when the contract is created. They can only be changed by a separate order approved by the required number of current signers; the platform cannot change them. Keep seed phrases offline: losing access to enough wallets means losing the treasury."

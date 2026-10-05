@@ -73,15 +73,13 @@
             ms_hint: "Мультисиг просит сумму в мелких единицах, а не в токенах. Вставь число выше как есть — оно уже пересчитано.",
             done: "Отметить исполненным",
             verify: "Проверить перевод",
-            verify_hint: "Tonix найдёт перевод в блокчейне сам и подтвердит решение. Ручная отметка появится, только если перевод не найдётся.",
-            done_manual: "Всё равно отметить исполненным (без проверки)",
+            verify_hint: "Tonix найдёт перевод в блокчейне сам и подтвердит решение. Отметить решение исполненным можно только по найденной транзакции.",
             checking: "Проверяю блокчейн…",
             v_ok: "Перевод найден в блокчейне. Решение подтверждено.",
             v_none: "Перевод не найден. Возможно, он ещё не прошёл — подожди минуту и попробуй снова. Или сумма и адрес не совпали с решением.",
             v_chain: "Блокчейн сейчас недоступен. Попробуй через минуту.",
             decline: "Отклонить",
             note_ph: "Причина (необязательно)",
-            ask_done: "Перевод не найден в блокчейне. Решение будет помечено как исполненное со слов владельца, и все участники увидят, что подтверждения в сети нет. Продолжить?",
             ask_decl: "Отметить решение как отклонённое подписантами?",
             saved: "Отмечено",
             err: "Не удалось отметить: ",
@@ -100,15 +98,13 @@
             ms_hint: "The multisig asks for the amount in the smallest units, not in tokens. Paste the number above as is — it is already converted.",
             done: "Mark as executed",
             verify: "Verify transfer",
-            verify_hint: "Tonix will find the transfer on-chain and confirm the decision. Manual marking appears only if no transfer is found.",
-            done_manual: "Mark as executed anyway (unverified)",
+            verify_hint: "Tonix will find the transfer on-chain and confirm the decision. A decision can be marked executed only by a transaction found on-chain.",
             checking: "Checking the blockchain…",
             v_ok: "Transfer found on-chain. Decision confirmed.",
             v_none: "No transfer found. It may not have gone through yet — wait a minute and retry. Or the amount and address do not match the decision.",
             v_chain: "The blockchain is unavailable right now. Try again in a minute.",
             decline: "Decline",
             note_ph: "Reason (optional)",
-            ask_done: "No transfer was found on-chain. The decision will be marked as executed on the owner's word, and every member will see that it is not verified. Continue?",
             ask_decl: "Mark this decision as declined by signers?",
             saved: "Marked",
             err: "Could not mark: ",
@@ -217,12 +213,7 @@
               '<button class="btn btn-main" style="flex:1;min-width:170px" onclick="tonixVerifyPayout(\'' + esc(p.id) + '\',this)">' + esc(t("verify")) + '</button>' +
               '<button class="btn" style="flex:1;min-width:120px" onclick="tonixMarkPayout(\'' + esc(p.id) + '\',\'declined\')">' + esc(t("decline")) + '</button>' +
               '</div>' +
-              '<div style="font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:8px">' + esc(t("verify_hint")) + '</div>' +
-              '<div id="pfall_' + esc(p.id) + '" style="display:none;margin-top:8px">' +
-                '<input id="pnote_' + esc(p.id) + '" type="text" placeholder="' + esc(t("note_ph")) + '" ' +
-                'style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-size:12.5px;font-family:inherit">' +
-                '<button class="btn" style="width:100%;margin-top:6px" onclick="tonixMarkPayout(\'' + esc(p.id) + '\',\'done\')">' + esc(t("done_manual")) + '</button>' +
-              '</div>'
+              '<div style="font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:8px">' + esc(t("verify_hint")) + '</div>'
             : "";
 
         return '<div style="border:1px solid var(--warn,#e0a64f);border-radius:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface2)">' +
@@ -241,8 +232,7 @@
 
     /* Проверка перевода в блокчейне. Решение подтверждает не человек,
        а найденная транзакция: тот получатель, та сумма, после закрытия
-       голосования. Если перевод не нашёлся, открываем ручную отметку —
-       но подписанному честно, что она без проверки. */
+       голосования. Без найденной транзакции решение не закрывается. */
     window.tonixVerifyPayout = async function (id, btn) {
         var old = btn ? btn.textContent : "";
         if (btn) { btn.disabled = true; btn.textContent = t("checking"); }
@@ -287,9 +277,6 @@
             if (err === "chain-unavailable") alert(t("v_chain"));
             else if (err === "not-found") {
                 alert(t("v_none"));
-                // Перевода нет — показываем ручной путь как запасной
-                var fb = document.getElementById("pfall_" + id);
-                if (fb) fb.style.display = "block";
             } else if (err === "not-awaiting") {
                 alert(t("not_await"));
                 window.tonixLoadPayoutSignals(window._tonixDaoKey);
@@ -317,7 +304,10 @@
        что действительно ждёт подписи. */
     window.tonixMarkPayout = async function (id, status) {
         var ru = (typeof curLang === "undefined" || curLang === "ru");
-        if (!confirm(status === "done" ? t("ask_done") : t("ask_decl"))) return;
+        /* Исполненным решение отмечает только проверка в блокчейне
+           (tonixVerifyPayout). Вручную можно лишь отклонить. */
+        if (status !== "declined") return;
+        if (!confirm(t("ask_decl"))) return;
         var noteEl = document.getElementById("pnote_" + id);
         var note = noteEl ? (noteEl.value || "").trim() : "";
         try {

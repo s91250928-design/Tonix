@@ -47,7 +47,7 @@
                 ["Вес голоса считает сервер",
                  "Браузер принадлежит пользователю, поэтому вес голоса в нём не вычисляется. Его ставит сервер по балансу на кошельке, а в базе стоит триггер: любая запись не от сервера получает вес один."],
                 ["Исполнение подтверждает блокчейн",
-                 "«Выплачено» ставится не по слову владельца, а после того как платформа нашла транзакцию в сети. Отметка вручную остаётся, но помечена как непроверенная — видно всем."]
+                 "«Выплачено» ставится не по слову владельца, а после того как платформа нашла транзакцию в сети. Без найденной транзакции решение исполненным не отметить."]
             ],
             beyebrow: "Проверка",
             btitle: "Попробуйте сломать",
@@ -152,7 +152,7 @@
                 ["Vote weight is computed server-side",
                  "The browser belongs to the user, so weight is never computed there. The server sets it from the wallet balance, and a database trigger forces weight to one for any row that did not come from the server."],
                 ["Execution is confirmed on-chain",
-                 "«Paid» is not set on the owner's word — the platform finds the transaction in the network first. Manual marking still exists but is labelled unverified, visibly, to everyone."]
+                 "«Paid» is not set on the owner's word — the platform finds the transaction in the network first. Without a transaction found on-chain a decision cannot be marked executed."]
             ],
             beyebrow: "Verification",
             btitle: "Try to break it",
