@@ -1915,7 +1915,7 @@
     function buildLangMenu(){var m=document.getElementById('langMenu');if(!m)return;m.innerHTML='';LANGS.forEach(function(l){var b=document.createElement('button');b.textContent=l.n;if(l.c===curLang)b.className='on';b.onclick=function(){applyLang(l.c);m.classList.remove('open');};m.appendChild(b);});}
     function toggleLang(e){e.stopPropagation();document.getElementById('langMenu').classList.toggle('open');}
     document.addEventListener('click',function(){var m=document.getElementById('langMenu');if(m)m.classList.remove('open');});
-    function applyLang(code){curLang=code;var d=I18N[code]||I18N.en||I18N.ru;
+    function applyLang(code){curLang=code;try{localStorage.setItem('tonix_lang',code);}catch(e){}var d=I18N[code]||I18N.en||I18N.ru;
         document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.innerHTML=v;});
         document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.placeholder=v;});
         var lc=document.getElementById('langCur');if(lc)lc.textContent=code.toUpperCase();
@@ -5297,7 +5297,8 @@
     /* Секции архитектуры ставим до applyLang: тогда язык применится
        к ним тем же проходом, а не вторым вызовом. */
     if(typeof tonixRenderLandingTech==='function')tonixRenderLandingTech();
-    applyLang('en');
+    /* Язык из прошлого визита; если не выбирали или он неизвестен — английский */
+    (function(){var c='en';try{var sv=localStorage.getItem('tonix_lang');if(sv&&LANGS.some(function(l){return l.c===sv;}))c=sv;}catch(e){}applyLang(c);})();
     filterDaos();
     scInit();
     initDecode();
