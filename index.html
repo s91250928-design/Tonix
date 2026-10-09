@@ -934,7 +934,7 @@
 <script src="js/daos-loader.js?v=20260719-11"></script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
 <script src="js/ton-core.bundle.js?v=20260719-11"></script>
-<script src="js/multisig-deploy.js?v=20260719-11"></script>
+<script src="js/multisig-deploy.js?v=20261009-1"></script>
 <script src="js/entry-fee.js?v=20260721-5"></script>
 </head>
 <body>
@@ -2220,6 +2220,12 @@
     function tonixNormName(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ');}
     /* Корректный TON-адрес (user-friendly, 48 символов base64url: EQ/UQ/kQ/0Q…).
        Чтобы в базу не попал мусор/скрипт вместо адреса казны или подписанта. */
+    /* Один и тот же адрес TON в любом виде (EQ…/UQ…/0:…) */
+    function tonixSameTonAddr(a,b){
+        if(!a||!b)return false;
+        try{var A=window.TonCore.Address;return A.parse(String(a).trim()).equals(A.parse(String(b).trim()));}
+        catch(e){return String(a).trim()===String(b).trim();}
+    }
     function tonixIsTonAddr(a){
         a=(typeof a==='string')?a.trim():'';
         /* user-friendly (EQ…/UQ…, 48 символов base64url) ИЛИ raw (0:<64 hex> / -1:<64 hex>) */
@@ -2286,6 +2292,19 @@
             if((ex.data||[]).some(function(d){return tonixNormName(d.name)===norm;})){
                 alert(T('g_name_taken'));
                 return;
+            }
+
+            /* 1b) Одна казна — одно DAO: готовый адрес не должен быть уже занят другим DAO */
+            if(msAddr){
+                var tq=await sb.from('daos').select('name,treasury_address').not('treasury_address','is',null);
+                if(!tq.error){
+                    var same=(tq.data||[]).filter(function(d){return tonixSameTonAddr(d.treasury_address,msAddr);});
+                    if(same.length){
+                        alert(ru?('Эта казна уже подключена к DAO «'+same[0].name+'». Одна казна — одно DAO. Оставь поле адреса пустым, и для нового DAO будет создана своя казна.')
+                               :('This treasury is already used by the DAO "'+same[0].name+'". One treasury per DAO. Leave the address empty to create a new treasury.'));
+                        return;
+                    }
+                }
             }
 
             /* 2) Деплой контракта (создатель подписывает и платит газ сети), либо готовый адрес */

@@ -40,13 +40,44 @@
     function configToData(cfg) {
         var t = TC();
         return t.beginCell()
-            .storeUint(0, 256)                       // orderSeqno
+            .storeUint(cfg.orderSeqno || 0, 256)     // стартовый orderSeqno (соль, см. randomSalt)
             .storeUint(cfg.threshold, 8)             // порог
             .storeRef(t.beginCell().storeDictDirect(signersDict(cfg.signers)))
             .storeUint(cfg.signers.length, 8)
             .storeDict(signersDict(cfg.proposers || []))
             .storeBit(!!cfg.allowArbitrarySeqno)
             .endCell();
+    }
+
+    /* Соль для уникального адреса казны.
+       Адрес контракта в TON = хэш(код + стартовые данные). Если стартовый
+       orderSeqno всегда 0, то одинаковые подписанты и порог дают ОДИН И ТОТ ЖЕ
+       адрес, и «новая» казна совпадает с уже существующей.
+       В режиме allowArbitrarySeqno=true официальный контракт стартовый
+       next_order_seqno не читает (multisig.func, op::new_order: проверка
+       только при ~allow_arbitrary_order_seqno; get_multisig_data отдаёт -1),
+       поэтому случайное число там ни на что не влияет, кроме адреса. */
+    function randomSalt() {
+        var b = new Uint8Array(8);
+        crypto.getRandomValues(b);
+        var hex = "";
+        for (var i = 0; i < b.length; i++) hex += ("0" + b[i].toString(16)).slice(-2);
+        var v = BigInt("0x" + hex);
+        return v === 0n ? 1n : v;
+    }
+
+    var TONCENTER_KEY = "4dd7f5b05be6418cb3e4920b690cbe41eb7c349732123846d0d15773fd3bd600";
+
+    /* Состояние адреса в сети: "uninitialized" | "active" | "frozen".
+       null — если проверить не удалось (сеть/лимиты). */
+    async function addressState(addrStr, testnet) {
+        try {
+            var api = (testnet ? "https://testnet.toncenter.com" : "https://toncenter.com") +
+                "/api/v2/getAddressState?address=" + encodeURIComponent(addrStr);
+            var r = await fetch(api, { headers: { "X-API-Key": TONCENTER_KEY } });
+            var j = await r.json();
+            return (j && j.ok === true) ? String(j.result) : null;
+        } catch (e) { return null; }
     }
 
     function parseSigners(list) {
@@ -70,7 +101,8 @@
             threshold: threshold,
             signers: signers,
             proposers: [],
-            allowArbitrarySeqno: opts.allowArbitrarySeqno !== false // по умолчанию true (как «Arbitrary»)
+            allowArbitrarySeqno: opts.allowArbitrarySeqno !== false, // по умолчанию true (как «Arbitrary»)
+            orderSeqno: opts.orderSeqno || 0  // 0 — как у официальной обёртки (для сверки)
         });
         var addr = t.contractAddress(0, { code: codeCell(), data: data });
         var testOnly = opts.testnet !== false;
@@ -98,12 +130,29 @@
         validate(signers, threshold);
         var testnet = opts.testnet !== false;
 
-        var data = configToData({
-            threshold: threshold, signers: signers, proposers: [],
-            allowArbitrarySeqno: opts.allowArbitrarySeqno !== false
-        });
+        var arbitrary = opts.allowArbitrarySeqno !== false;
         var code = codeCell();
-        var address = t.contractAddress(0, { code: code, data: data });
+        var data, address, addrStr, state;
+
+        /* Каждая новая казна получает свой адрес, даже с теми же подписантами
+           и порогом. Перед подписью проверяем, что адрес в сети ещё пуст:
+           иначе деньги ушли бы в уже существующий контракт. */
+        for (var attempt = 0; attempt < 3; attempt++) {
+            data = configToData({
+                threshold: threshold, signers: signers, proposers: [],
+                allowArbitrarySeqno: arbitrary,
+                orderSeqno: arbitrary ? randomSalt() : 0
+            });
+            address = t.contractAddress(0, { code: code, data: data });
+            addrStr = address.toString({ bounceable: true, testOnly: testnet });
+            state = await addressState(addrStr, testnet);
+            if (state !== "active" && state !== "frozen") break;
+            if (!arbitrary) break; /* без соли адрес не сменить */
+        }
+        if (state === "active" || state === "frozen")
+            throw new Error("Казна с такими настройками уже существует: " + addrStr +
+                ". Новый контракт не создан, деньги не отправлены.");
+
         var stateInit = t.beginCell().store(t.storeStateInit({ code: code, data: data })).endCell();
         var body = t.beginCell().storeUint(0, 32).storeUint(0, 64).endCell(); // op=0, queryId=0
 
