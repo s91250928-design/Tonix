@@ -3386,6 +3386,14 @@
                 +(ru?'Пользователь не указал Telegram для связи.':'No Telegram provided.')+'</div>';
         }
 
+        /* Предложить исключение голосованием может любой участник DAO —
+           но не себя и не владельца. Исполняет сервер finish-proposal. */
+        if(typeof isMember!=='undefined' && isMember && uid!==currentUID && !isOwner){
+            window._tonixLastMemberName=name;
+            body+='<button class="btn btn-ghost" style="width:100%;margin-top:6px;color:var(--bad)" '
+                +'onclick="tonixProposeRemove(\''+uid+'\')">'+(ru?'Предложить исключить':'Propose removal')+'</button>';
+        }
+
         /* Управление ролью — только владельцу и только над участниками
            (не над собой, не над владельцем). Право финально решает сервер. */
         if(window._tonixMyRole==='owner' && uid!==currentUID && !isOwner){
@@ -3402,6 +3410,27 @@
             '<button class="btn btn-ghost" style="width:100%;margin-top:14px" onclick="closeModal()">'+(ru?'Закрыть':'Close')+'</button>');
     }
     window._tonixMemberOwnerUid=null;
+
+    /* Создать голосование об исключении участника. Причина обязательна:
+       её увидят все, и без неё такое предложение похоже на травлю. */
+    async function tonixProposeRemove(uid){
+        var ru=(curLang==='ru');
+        var key=window._tonixDaoKey||'';
+        var name=window._tonixLastMemberName||tonixDisplayName(uid,'');
+        var reason=prompt(ru?('Почему нужно исключить '+name+'? Причину увидят все участники.')
+                            :('Why should '+name+' be removed? Everyone will see the reason.'),'');
+        if(reason===null)return;
+        reason=String(reason).trim();
+        if(reason.length<5){alert(ru?'Напиши причину хотя бы в несколько слов':'Please write a short reason');return;}
+        var title=(ru?'Исключить из DAO: ':'Remove from DAO: ')+name;
+        var r=await govCreateProposal(key,title,reason,{type:'remove_member',target:uid},0);
+        if(!r||!r.ok){alert((r&&r.error)||(ru?'Ошибка':'Error'));return;}
+        closeModal();
+        tonixNotice(ru?'Голосование создано':'Vote created',
+            ru?'Участники решат голосованием. Если «за» победит, человек будет исключён из DAO.'
+              :'Members will decide. If it passes, the member will be removed from the DAO.','ok');
+        if(typeof tonixVoteTabOpened==='function')tonixVoteTabOpened();
+    }
 
     /* Назначить или снять админа. Только владелец; сервер это проверяет. */
     async function tonixSetAdmin(uid, action){
@@ -5018,6 +5047,7 @@
             else stb='<span class="st st-active" data-ends="'+tonixEsc(p.endsAt)+'">'+(T('g_active_dot'))+proposalTimeLeft(p.endsAt,curLang)+'</span>';
             var action='';
             if(p.actionType==='set_entry_threshold'&&p.actionValue!=null)action='<div style="font-size:12.5px;color:var(--accent);margin-top:5px">'+(T('g_on_pass'))+tonixEsc(p.actionValue)+' TON</div>';
+            else if(p.actionType==='remove_member'&&p.actionTarget)action='<div style="font-size:12.5px;color:var(--warn);margin-top:5px">'+(ru?'При победе «за» участник будет исключён из DAO':'If passed, the member will be removed from the DAO')+'</div>';
             else if(p.actionType==='payout'&&p.payoutAmount!=null){
                 var psMap={none:(ru?'решение ещё не принято':'not decided yet'),
                            awaiting_signature:(ru?'ждёт подписи мультисига':'awaiting multisig signature'),

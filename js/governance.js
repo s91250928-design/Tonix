@@ -71,6 +71,7 @@ async function listProposals(daoKey) {
         return {
             id: p.id, title: p.title, description: p.description,
             actionType: p.action_type, actionValue: p.action_value,
+            actionTarget: p.action_target || null,
             status: p.status, endsAt: p.ends_at, createdAt: p.created_at,
             payoutAddress: p.payout_address || null,
             payoutAmount: (p.payout_amount != null) ? Number(p.payout_amount) : null,
@@ -172,6 +173,16 @@ async function govCreateProposal(daoKey, title, description, action, durationMin
             row.payout_symbol = String(action.symbol || '?').slice(0, 20);
             row.payout_decimals = dec;
         }
+    }
+    /* Исключение участника по голосованию. Кого исключить — в action_target.
+       Исполняет сервер finish-proposal при победе «за»; владельца он не
+       исключит, даже если такое предложение кто-то создаст в обход формы. */
+    if (row.action_type === 'remove_member') {
+        const target = String((action && action.target) || '').trim();
+        if (!/^[0-9a-f-]{36}$/i.test(target)) return { ok: false, error: 'Не выбран участник' };
+        if (target === currentUID) return { ok: false, error: 'Нельзя предложить исключить себя' };
+        row.action_target = target;
+        row.action_value = null;
     }
     const { data, error } = await sb.from('dao_proposals').insert(row).select().maybeSingle();
     if (error) { console.error('[Gov] create:', error.message); return { ok: false, error: error.message }; }
