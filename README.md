@@ -11,7 +11,7 @@ Tonix — это инструмент для токен-сообществ на 
 - **Своего смарт-контракта для казны у Tonix нет.** Казна сообщества — это официальный мультисиг TON ([multisig-contract-v2](https://github.com/ton-blockchain/multisig-contract-v2)) от команды TON Core, прошедший аудит Zellic и Trail of Bits. Такой же контракт создаёт Tonkeeper Pro и multisig.ton.org.
 - **Казна только читается.** Модули [`js/treasury.js`](js/treasury.js) и [`js/treasury-tx.js`](js/treasury-tx.js) получают баланс и историю транзакций мультисига из публичного API блокчейна. В них нет ключей, подписей и отправки средств.
 - **Платформа никогда не подписывает транзакции сама.** В коде всего три места, где создаётся транзакция, и все три отправляют её в кошелёк пользователя через TON Connect, где человек сам нажимает «Подтвердить»:
-  - [`js/multisig-deploy.js`](js/multisig-deploy.js), строка 124 — создание мультисига кошельком самого основателя;
+  - [`js/multisig-deploy.js`](js/multisig-deploy.js#L156), строка 156 — создание мультисига кошельком самого основателя;
   - [`js/entry-fee.js`](js/entry-fee.js), строки 261 и 281 — оплата входа в DAO, деньги уходят напрямую в казну этого DAO, а не платформе.
 - **В коде нет приватных ключей и сид-фраз.** Выводом средств из казны управляют только подписанты мультисига в своих кошельках (Tonkeeper, multisig.ton.org).
 
@@ -29,6 +29,7 @@ Tonix — это инструмент для токен-сообществ на 
 | `js/multisig-deploy.js` | Создание официального мультисига кошельком пользователя |
 | `js/entry-fee.js`, `js/verify-entry-fee.ts` | Платный вход в DAO (оплата в казну DAO) и его проверка на сервере |
 | `js/config.js` | Публичные настройки (адрес базы, публичный ключ, адреса казны) |
+| `supabase/functions/` | Серверные функции: удаление сообщений, подсчёт и исполнение голосований, удаление участников. Ключи берутся из секретов сервера, в коде их нет |
 
 ## Как устроен чат холдеров
 
@@ -54,7 +55,7 @@ You can verify this in the code:
 - **Tonix has no treasury contract of its own.** A community treasury is the official TON multisig ([multisig-contract-v2](https://github.com/ton-blockchain/multisig-contract-v2)) by TON Core, audited by Zellic and Trail of Bits — the same contract Tonkeeper Pro and multisig.ton.org deploy.
 - **The treasury is read-only.** [`js/treasury.js`](js/treasury.js) and [`js/treasury-tx.js`](js/treasury-tx.js) only fetch the multisig balance and transaction history from a public blockchain API. No keys, no signing, no transfers.
 - **The platform never signs transactions.** There are exactly three places that build a transaction, and all of them hand it to the user's own wallet via TON Connect for manual approval:
-  - [`js/multisig-deploy.js`](js/multisig-deploy.js) line 124 — the founder deploys the multisig from their own wallet;
+  - [`js/multisig-deploy.js`](js/multisig-deploy.js#L156) line 156 — the founder deploys the multisig from their own wallet;
   - [`js/entry-fee.js`](js/entry-fee.js) lines 261 and 281 — DAO entry fee, paid straight into that DAO's treasury, not to the platform.
 - **No private keys or seed phrases in the code.** Only the multisig signers can withdraw, from their own wallets.
 
