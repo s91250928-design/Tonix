@@ -4479,7 +4479,7 @@
         try{
             var r=await deleteChatMessage(window._tonixChatId, msgId);
             if(!r.ok){
-                alert(r.code==='42501' ? T('md_denied') : (T('md_failed')+(r.error||'')));
+                alert((r.code==='42501'||r.error==='not_allowed') ? T('md_denied') : (T('md_failed')+(r.error||'')));
                 return;
             }
             if(node&&node.parentNode) node.remove();
@@ -4500,12 +4500,21 @@
     /* Кто владелец этого DAO — спрашиваем базу один раз на открытие */
     async function tonixResolveOwner(){
         window._tonixOwnerHere=false;
+        window._tonixAdminHere=false;
         var key=window._tonixDaoKey;
         if(!key||!currentUID||typeof sb==='undefined')return;
         try{
             var r=await sb.from('daos').select('owner_uid').eq('slug',key).limit(1).maybeSingle();
             if(r&&r.data&&r.data.owner_uid===currentUID)window._tonixOwnerHere=true;
         }catch(e){}
+        /* Админ DAO тоже может убирать чужие сообщения (кроме владельца
+           и других админов — это проверяет сервер delete-message). */
+        if(!window._tonixOwnerHere){
+            try{
+                var rr=await sb.rpc('tonix_dao_role',{p_dao:key,p_uid:currentUID});
+                if(rr&&!rr.error&&rr.data==='admin')window._tonixAdminHere=true;
+            }catch(e){}
+        }
     }
     async function tonixRefreshPin(){
         var bar=document.getElementById('chatPin'); if(!bar)return;
@@ -4668,6 +4677,10 @@
             if(m.text){
                 item(T('mm_edit'),icEdit,'',function(){ tonixEditMsg(m,node); });
             }
+            item(T('mm_delete'),icDel,'danger',function(){ tonixDeleteMsg(m.id,node); });
+        } else if(tonixIsDaoOwner()||window._tonixAdminHere===true){
+            /* Чужое сообщение: убрать может владелец или админ DAO.
+               Окончательное право проверяет сервер delete-message. */
             item(T('mm_delete'),icDel,'danger',function(){ tonixDeleteMsg(m.id,node); });
         }
         if(!mn.children.length)return; /* нечего показывать — не мигаем пустой плашкой */
