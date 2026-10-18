@@ -33,15 +33,16 @@
         if (document.getElementById("tcoinCss")) return;
         var css = [
             /* Сетка вкладки: монета слева, панель баланса справа, остальное — на всю ширину */
-            /* Третья колонка 1fr — пустое место справа: панель баланса не шире ~520px,
-               а блоки ниже (адрес казны, токены) по-прежнему на всю ширину */
-            "#d-treasury.on.tcoin-on{display:grid;grid-template-columns:1fr auto minmax(0,520px) 1fr;column-gap:28px;row-gap:16px;align-items:start}",
+            /* Компьютер: монета у левого края (как вкладка «Обзор»), панель до правого края —
+               те же границы, что у вкладок и блоков ниже. Видимый край монеты ставим ровно
+               под началом вкладок: у картинки есть прозрачные поля, их «съедаем» сдвигом. */
+            "#d-treasury.on.tcoin-on{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:16px;align-items:start}",
             "#d-treasury.tcoin-on>*{grid-column:1/-1}",
-            "#d-treasury.tcoin-on>.tcoin-stage{grid-column:2;grid-row:1}",
-            "#d-treasury.tcoin-on>.treas{grid-column:3;grid-row:1;align-self:center;margin-bottom:0;min-height:var(--tc,156px);display:flex;flex-direction:column;justify-content:center}",
+            "#d-treasury.tcoin-on>.tcoin-stage{grid-column:1;grid-row:1;margin-left:var(--tc-shift,0px)}",
+            "#d-treasury.tcoin-on>.treas{grid-column:2;grid-row:1;align-self:center;margin-bottom:0;min-height:var(--tc,156px);display:flex;flex-direction:column;justify-content:center}",
             "#d-treasury.tcoin-on>.treas .v{overflow-wrap:anywhere}",
-            ".tcoin-stage{--tc:184px;align-self:center;position:relative;width:var(--tc);height:var(--tc);perspective:700px;pointer-events:none}",
-            "@media(max-width:560px){.tcoin-stage,#d-treasury.tcoin-on>.treas{--tc:124px}#d-treasury.on.tcoin-on{column-gap:12px;row-gap:0;grid-template-columns:auto minmax(0,1fr)}#d-treasury.tcoin-on>.tcoin-stage{grid-column:1}#d-treasury.tcoin-on>.treas{grid-column:2;align-self:start;margin-bottom:16px}#d-treasury.tcoin-on>.treas{padding:16px 14px}#d-treasury.tcoin-on>.treas .v{font-size:clamp(24px,8vw,40px);line-height:1.15}}",
+            ".tcoin-stage{--tc:212px;--tc-shift:calc(var(--tc) * -.09);align-self:center;position:relative;width:var(--tc);height:var(--tc);perspective:700px;pointer-events:none}",
+            "@media(max-width:560px){.tcoin-stage,#d-treasury.tcoin-on>.treas{--tc:124px}#d-treasury.on.tcoin-on{column-gap:12px;row-gap:0;grid-template-columns:auto minmax(0,1fr)}#d-treasury.tcoin-on>.tcoin-stage{grid-column:1;margin-left:0}#d-treasury.tcoin-on>.treas{grid-column:2;align-self:start;margin-bottom:16px}#d-treasury.tcoin-on>.treas{padding:16px 14px}#d-treasury.tcoin-on>.treas .v{font-size:clamp(24px,8vw,40px);line-height:1.15}}",
             /* свечение под монетой */
             ".tc-glow{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 45%,transparent),transparent 72%);opacity:.0;transition:opacity .6s}",
             ".tcoin-stage.tc-in .tc-glow{opacity:.85}",
@@ -74,6 +75,7 @@
             ".tc-img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5)) drop-shadow(0 0 16px color-mix(in srgb,var(--accent) 50%,transparent))}",
             ".tcoin-stage.tc-custom .tc-edge,.tcoin-stage.tc-custom .tc-rim,.tcoin-stage.tc-custom .tc-face,.tcoin-stage.tc-custom .tc-shine{display:none}",
             ".tcoin-stage:not(.tc-custom) .tc-img{display:none}",
+            ".tcoin-stage.tc-custom{--tc-shift:calc(var(--tc) * -.18)}",
             /* частицы рисуются на холсте больше монеты, чтобы прилетали издалека */
             ".tc-parts{position:absolute;left:-40%;top:-40%;width:180%;height:180%;transition:opacity .4s}",
             "@media(prefers-reduced-motion:reduce){.tc-float,.tc-tilt,.tc-orb,.tc-shine::after{animation:none!important}}"
