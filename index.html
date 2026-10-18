@@ -19,7 +19,7 @@
       background-image:var(--bg-d,none)}
     /* Вертикальный экран (телефон): свой фон, если владелец его загрузил, иначе общий */
     @media (orientation:portrait){.dao-bg{background-image:var(--bg-m,var(--bg-d,none))}}
-    .dao-bg-scrim{position:fixed;inset:0;z-index:0;background:var(--bg);opacity:.82;display:none;pointer-events:none}
+    .dao-bg-scrim{position:fixed;inset:0;z-index:0;background:var(--bg);opacity:.35;display:none;pointer-events:none}
     #s-dao.has-bg .dao-bg{opacity:1}
     #s-dao.has-bg .dao-bg-scrim{display:block}
     #s-dao .container{position:relative;z-index:1}
@@ -929,7 +929,8 @@
 <script src="js/governance.js?v=20261013-1"></script>
 <script src="js/auth.js?v=20260719-11"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
-<script src="js/treasury.js?v=20260721-7"></script>
+<script src="js/treasury.js?v=20261018-1"></script>
+<script src="js/treasury-coin.js?v=20261018-1"></script>
 <script src="js/treasury-guide.js?v=20260721-4"></script>
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20260721-11"></script>
@@ -1713,9 +1714,11 @@
         <input type="file" id="bgfile" accept="image/*" style="display:none" onchange="loadBg(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_bg_note">Картинка станет фоном вашего DAO. Текст останется читаемым.</p>
         <div class="glabel" style="margin-top:16px" data-i18n="dr_bgm">Фон для телефона</div><div class="bgbtns"><button onclick="document.getElementById('bgmfile').click()" data-i18n="dr_bg_load">Загрузить картинку</button><button onclick="clearBgMob()" data-i18n="dr_bg_clear">Убрать</button></div>
         <input type="file" id="bgmfile" accept="image/*" style="display:none" onchange="loadBgMob(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_bgm_note">Вертикальная картинка (например 1080×2340). Если не загружена, на телефоне будет общий фон.</p>
-        <div class="glabel" style="margin-top:16px;display:flex;justify-content:space-between"><span data-i18n="dr_bgdim">Затемнение фона</span><span id="bgDimVal">82%</span></div>
-        <input type="range" id="bgDim" min="0" max="90" step="1" value="82" style="width:100%;accent-color:var(--accent)" oninput="tonixDimInput(this.value)" onchange="tonixDimSave(this.value)">
+        <div class="glabel" style="margin-top:16px;display:flex;justify-content:space-between"><span data-i18n="dr_bgdim">Затемнение фона</span><span id="bgDimVal">35%</span></div>
+        <input type="range" id="bgDim" min="0" max="90" step="1" value="35" style="width:100%;accent-color:var(--accent)" oninput="tonixDimInput(this.value)" onchange="tonixDimSave(this.value)">
         <p style="font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5" data-i18n="dr_bgdim_note">Меньше — фон ярче. Карточки и текст остаются непрозрачными, поэтому всё читается.</p></div>
+    <div class="grp"><div class="glabel" data-i18n="dr_tcoin">Монета казны</div><div class="bgbtns"><button onclick="document.getElementById('tcoinfile').click()" data-i18n="dr_bg_load">Загрузить картинку</button><button onclick="tonixClearTreasuryCoin()" data-i18n="dr_bg_clear">Убрать</button></div>
+        <input type="file" id="tcoinfile" accept="image/png,image/webp,image/*" style="display:none" onchange="tonixLoadTreasuryCoin(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_tcoin_note">PNG с прозрачным фоном (например, 3D-рендер вашего токена). Без картинки показывается монета TON или главного токена казны.</p></div>
 </div>
 
 <!-- МОДАЛКА -->
@@ -1923,9 +1926,17 @@
     function buildLangMenu(){var m=document.getElementById('langMenu');if(!m)return;m.innerHTML='';LANGS.forEach(function(l){var b=document.createElement('button');b.textContent=l.n;if(l.c===curLang)b.className='on';b.onclick=function(){applyLang(l.c);m.classList.remove('open');};m.appendChild(b);});}
     function toggleLang(e){e.stopPropagation();document.getElementById('langMenu').classList.toggle('open');}
     document.addEventListener('click',function(){var m=document.getElementById('langMenu');if(m)m.classList.remove('open');});
-    /* Фон для телефона и затемнение фона DAO */
-    I18N.ru=Object.assign(I18N.ru||{},{"dr_bgm":"Фон для телефона","dr_bgm_note":"Вертикальная картинка (например 1080×2340). Если не загружена, на телефоне будет общий фон.","dr_bgdim":"Затемнение фона","dr_bgdim_note":"Меньше — фон ярче. Карточки и текст остаются непрозрачными, поэтому всё читается."});
-    I18N.en=Object.assign(I18N.en||{},{"dr_bgm":"Phone background","dr_bgm_note":"A vertical image (e.g. 1080×2340). If none is set, phones show the main background.","dr_bgdim":"Background dimming","dr_bgdim_note":"Lower = brighter background. Cards and text stay opaque, so everything stays readable."});
+    /* Фон для телефона, затемнение фона и монета казны — все 10 языков интерфейса */
+    I18N.ru=Object.assign(I18N.ru||{},{"dr_bgm": "Фон для телефона", "dr_bgm_note": "Вертикальная картинка (например 1080×2340). Если не загружена, на телефоне будет общий фон.", "dr_bgdim": "Затемнение фона", "dr_bgdim_note": "Меньше — фон ярче. Карточки и текст остаются непрозрачными, поэтому всё читается.", "dr_tcoin": "Монета казны", "dr_tcoin_note": "PNG с прозрачным фоном (например, 3D-рендер вашего токена). Без картинки показывается монета TON или главного токена казны."});
+    I18N.en=Object.assign(I18N.en||{},{"dr_bgm": "Phone background", "dr_bgm_note": "A vertical image (e.g. 1080×2340). If none is set, phones show the main background.", "dr_bgdim": "Background dimming", "dr_bgdim_note": "Lower = brighter background. Cards and text stay opaque, so everything stays readable.", "dr_tcoin": "Treasury coin", "dr_tcoin_note": "A PNG with a transparent background (e.g. a 3D render of your token). Without one, the TON coin or the treasury's main token is shown."});
+    I18N.es=Object.assign(I18N.es||{},{"dr_bgm": "Fondo para móvil", "dr_bgm_note": "Imagen vertical (por ejemplo 1080×2340). Si no la subes, en el móvil se mostrará el fondo principal.", "dr_bgdim": "Oscurecimiento del fondo", "dr_bgdim_note": "Menos = fondo más brillante. Las tarjetas y el texto siguen siendo opacos, así que todo se lee bien.", "dr_tcoin": "Moneda de la tesorería", "dr_tcoin_note": "PNG con fondo transparente (por ejemplo, el render 3D de tu token). Sin imagen se muestra la moneda de TON o del token principal de la tesorería."});
+    I18N.pt=Object.assign(I18N.pt||{},{"dr_bgm": "Fundo para celular", "dr_bgm_note": "Imagem vertical (por exemplo 1080×2340). Se não houver, o celular mostra o fundo principal.", "dr_bgdim": "Escurecimento do fundo", "dr_bgdim_note": "Menos = fundo mais claro. Cartões e texto continuam opacos, então tudo fica legível.", "dr_tcoin": "Moeda da tesouraria", "dr_tcoin_note": "PNG com fundo transparente (por exemplo, a renderização 3D do seu token). Sem imagem, aparece a moeda TON ou do token principal da tesouraria."});
+    I18N.fr=Object.assign(I18N.fr||{},{"dr_bgm": "Fond pour mobile", "dr_bgm_note": "Image verticale (par exemple 1080×2340). Sans elle, le mobile affiche le fond principal.", "dr_bgdim": "Assombrissement du fond", "dr_bgdim_note": "Moins = fond plus lumineux. Les cartes et le texte restent opaques : tout reste lisible.", "dr_tcoin": "Pièce de la trésorerie", "dr_tcoin_note": "PNG à fond transparent (par exemple le rendu 3D de votre jeton). Sans image, la pièce TON ou celle du jeton principal de la trésorerie s'affiche."});
+    I18N.de=Object.assign(I18N.de||{},{"dr_bgm": "Hintergrund fürs Handy", "dr_bgm_note": "Hochformat-Bild (z. B. 1080×2340). Ohne Bild zeigt das Handy den Haupthintergrund.", "dr_bgdim": "Abdunklung des Hintergrunds", "dr_bgdim_note": "Weniger = hellerer Hintergrund. Karten und Text bleiben deckend, alles bleibt lesbar.", "dr_tcoin": "Münze der Schatzkammer", "dr_tcoin_note": "PNG mit transparentem Hintergrund (z. B. das 3D-Rendering deines Tokens). Ohne Bild wird die TON-Münze oder die des Haupt-Tokens angezeigt."});
+    I18N.zh=Object.assign(I18N.zh||{},{"dr_bgm": "手机背景", "dr_bgm_note": "竖版图片（例如 1080×2340）。未上传时，手机上显示主背景。", "dr_bgdim": "背景变暗", "dr_bgdim_note": "数值越小，背景越亮。卡片和文字保持不透明，始终清晰可读。", "dr_tcoin": "金库硬币", "dr_tcoin_note": "透明背景的 PNG（例如代币的 3D 渲染图）。未上传时显示 TON 或金库主代币的硬币。"});
+    I18N.ja=Object.assign(I18N.ja||{},{"dr_bgm": "スマホ用の背景", "dr_bgm_note": "縦長の画像（例：1080×2340）。未設定の場合、スマホではメインの背景が表示されます。", "dr_bgdim": "背景の暗さ", "dr_bgdim_note": "小さいほど背景が明るくなります。カードと文字は不透明のままなので、読みやすさは保たれます。", "dr_tcoin": "トレジャリーのコイン", "dr_tcoin_note": "背景が透明な PNG（例：トークンの 3D レンダー）。未設定の場合は TON またはメイントークンのコインが表示されます。"});
+    I18N.ar=Object.assign(I18N.ar||{},{"dr_bgm": "خلفية الهاتف", "dr_bgm_note": "صورة عمودية (مثلاً 1080×2340). إن لم تُرفع، يعرض الهاتف الخلفية الرئيسية.", "dr_bgdim": "تعتيم الخلفية", "dr_bgdim_note": "قيمة أقل = خلفية أكثر سطوعاً. تبقى البطاقات والنصوص معتمة، فيبقى كل شيء مقروءاً.", "dr_tcoin": "عملة الخزينة", "dr_tcoin_note": "صورة PNG بخلفية شفافة (مثل تصميم ثلاثي الأبعاد لرمزك). بدونها تظهر عملة TON أو عملة الرمز الرئيسي للخزينة."});
+    I18N.hi=Object.assign(I18N.hi||{},{"dr_bgm": "फ़ोन के लिए बैकग्राउंड", "dr_bgm_note": "खड़ी तस्वीर (जैसे 1080×2340)। अगर नहीं लगाई, तो फ़ोन पर मुख्य बैकग्राउंड दिखेगा।", "dr_bgdim": "बैकग्राउंड का गहरापन", "dr_bgdim_note": "कम = ज़्यादा चमकीला बैकग्राउंड। कार्ड और टेक्स्ट अपारदर्शी रहते हैं, इसलिए सब आसानी से पढ़ा जा सकता है।", "dr_tcoin": "ट्रेज़री का सिक्का", "dr_tcoin_note": "पारदर्शी बैकग्राउंड वाली PNG (जैसे आपके टोकन का 3D रेंडर)। तस्वीर न हो तो TON या ट्रेज़री के मुख्य टोकन का सिक्का दिखेगा।"});
     function applyLang(code){curLang=code;try{localStorage.setItem('tonix_lang',code);}catch(e){}var d=I18N[code]||I18N.en||I18N.ru;
         document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.innerHTML=v;});
         document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.placeholder=v;});
@@ -3551,13 +3562,14 @@
             if(!r.data||!r.data[0]){
                 /* У этого DAO оформления нет — не оставляем фон предыдущего DAO */
                 tonixSetDaoBg(null,null); tonixApplyDim(null);
+                if(typeof tonixTreasuryCoinRefresh==='function') tonixTreasuryCoinRefresh();
                 return;
             }
             var s=r.data[0], sd=document.getElementById('s-dao');
             /* Держим оформление под рукой: при замене картинки нужно
                знать прежнюю ссылку, чтобы убрать старый файл. */
             window._tonixDaoLook=window._tonixDaoLook||{};
-            window._tonixDaoLook[key]={bg_url:s.bg_url||null,bg_mobile_url:s.bg_mobile_url||null,avatar_url:s.avatar_url||null};
+            window._tonixDaoLook[key]={bg_url:s.bg_url||null,bg_mobile_url:s.bg_mobile_url||null,avatar_url:s.avatar_url||null,treasury_coin_url:s.treasury_coin_url||null};
             /* Цвет акцента */
             if(sd){
                 if(s.accent){ sd.style.setProperty('--accent',s.accent); sd.style.setProperty('--accent2',s.accent); }
@@ -3566,6 +3578,8 @@
             /* Фон: общий + отдельный для телефона, и сила затемнения */
             tonixSetDaoBg(s.bg_url||null, s.bg_mobile_url||null);
             tonixApplyDim(s.bg_dim);
+            /* Монета в панели казны: своя картинка DAO, если загружена */
+            if(typeof tonixTreasuryCoinRefresh==='function') tonixTreasuryCoinRefresh();
             /* Интерфейс DAO */
             if(s.layout&&typeof setLayout==='function') setLayout(s.layout,true);
             /* Аватар DAO */
@@ -4254,12 +4268,12 @@
         sd.classList.toggle('has-bg', !!(desk||mob));
     }
     /* Затемнение поверх фона: 0 = фон как есть, 0.9 = почти не виден.
-       Пусто — стандартное значение из CSS (0.82). */
+       Пусто — стандартное значение из CSS (0.35: подобрали, что фон яркий, а текст читается). */
     function tonixApplyDim(v){
         var sc=document.getElementById('daoBgScrim');
         var n=(v==null||v==='')?null:Math.max(0,Math.min(0.9,Number(v)));
         if(sc){ if(n==null||isNaN(n)) sc.style.opacity=''; else sc.style.opacity=String(n); }
-        var pct=Math.round(((n==null||isNaN(n))?0.82:n)*100);
+        var pct=Math.round(((n==null||isNaN(n))?0.35:n)*100);
         var rg=document.getElementById('bgDim'); if(rg) rg.value=pct;
         var lb=document.getElementById('bgDimVal'); if(lb) lb.textContent=pct+'%';
     }
@@ -4319,6 +4333,8 @@
         if(name==='chat')setTimeout(tonixChatTabOpened,0);
         if(name==='vote')setTimeout(tonixVoteTabOpened,0);
         if(name==='overview')setTimeout(tonixActivityOpened,0);
+        /* Казна: монета собирается из частиц при каждом открытии вкладки */
+        if(name==='treasury'&&typeof tonixTreasuryCoinPlay==='function')setTimeout(tonixTreasuryCoinPlay,0);
         document.querySelectorAll('#s-dao .tabpage').forEach(function(p){p.classList.remove('on')});
         var pg=document.getElementById('d-'+name);if(pg)pg.classList.add('on');
         var map={overview:0,vote:1,treasury:2,transactions:3,members:4,chat:5,rules:6,transparency:7};

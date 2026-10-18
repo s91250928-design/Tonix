@@ -363,6 +363,9 @@
                                         var ru = (typeof curLang === "undefined" || curLang === "ru");
                                         lbl.textContent = (ru ? "Баланс казны в " : "Treasury balance in ") + (jt.symbol || "?");
                                     }
+                                    /* Монета слева от баланса — с картинкой этого токена */
+                                    if (typeof window.tonixTreasuryCoinSetJetton === "function")
+                                        window.tonixTreasuryCoinSetJetton(daoKey, jt.image || "", jt.symbol || "");
                                     var m3 = document.getElementById("dhM3");
                                     if (m3) m3.textContent = amt;
                                     /* Подпись под числом на обзоре: «HPO в казне»
