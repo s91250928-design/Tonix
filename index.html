@@ -15,7 +15,10 @@
     /* Фон DAO держим на экране, а не внутри секции: высота секции меняется
        от вкладки к вкладке, и картинка каждый раз масштабировалась по-разному. */
     .dao-bg{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center center;
-      background-repeat:no-repeat;opacity:0;transition:opacity .3s;pointer-events:none}
+      background-repeat:no-repeat;opacity:0;transition:opacity .3s;pointer-events:none;
+      background-image:var(--bg-d,none)}
+    /* Вертикальный экран (телефон): свой фон, если владелец его загрузил, иначе общий */
+    @media (orientation:portrait){.dao-bg{background-image:var(--bg-m,var(--bg-d,none))}}
     .dao-bg-scrim{position:fixed;inset:0;z-index:0;background:var(--bg);opacity:.82;display:none;pointer-events:none}
     #s-dao.has-bg .dao-bg{opacity:1}
     #s-dao.has-bg .dao-bg-scrim{display:block}
@@ -1707,7 +1710,12 @@
     <div class="grp"><div class="glabel" data-i18n="iface_dao">Интерфейс DAO</div><div class="toggle"><button class="on" id="layClassic" onclick="setLayout('classic')" data-i18n="iface_classic">Вкладки сверху</button><button id="laySidebar" onclick="setLayout('sidebar')" data-i18n="iface_side">Меню слева</button><button id="layBottom" onclick="setLayout('bottom')" data-i18n="iface_bottom">Снизу</button></div><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="iface_note">Три варианта навигации: вкладки сверху, вертикальное меню слева или плавающая панель снизу. Контент один и тот же.</p></div>
     <div class="grp"><div class="glabel" data-i18n="dav_h">Аватар DAO</div><div class="bgbtns"><button onclick="document.getElementById('daoavafile').click()" data-i18n="dav_load">Загрузить аватар</button><button onclick="clearDaoAvatar()" data-i18n="dav_clear">Убрать</button></div><input type="file" id="daoavafile" accept="image/*" style="display:none" onchange="loadDaoAvatar(event)"><p style="font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5"><span data-i18n="dav_note">Картинка заменит буквы в шапке DAO и в чате. Обрежется в квадрат.</span></p></div>
     <div class="grp"><div class="glabel" data-i18n="dr_bg">Свой фон DAO</div><div class="bgbtns"><button onclick="document.getElementById('bgfile').click()" data-i18n="dr_bg_load">Загрузить картинку</button><button onclick="clearBg()" data-i18n="dr_bg_clear">Убрать</button></div>
-        <input type="file" id="bgfile" accept="image/*" style="display:none" onchange="loadBg(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_bg_note">Картинка станет фоном вашего DAO. Текст останется читаемым.</p></div>
+        <input type="file" id="bgfile" accept="image/*" style="display:none" onchange="loadBg(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_bg_note">Картинка станет фоном вашего DAO. Текст останется читаемым.</p>
+        <div class="glabel" style="margin-top:16px" data-i18n="dr_bgm">Фон для телефона</div><div class="bgbtns"><button onclick="document.getElementById('bgmfile').click()" data-i18n="dr_bg_load">Загрузить картинку</button><button onclick="clearBgMob()" data-i18n="dr_bg_clear">Убрать</button></div>
+        <input type="file" id="bgmfile" accept="image/*" style="display:none" onchange="loadBgMob(event)"><p style="font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5" data-i18n="dr_bgm_note">Вертикальная картинка (например 1080×2340). Если не загружена, на телефоне будет общий фон.</p>
+        <div class="glabel" style="margin-top:16px;display:flex;justify-content:space-between"><span data-i18n="dr_bgdim">Затемнение фона</span><span id="bgDimVal">82%</span></div>
+        <input type="range" id="bgDim" min="0" max="90" step="1" value="82" style="width:100%;accent-color:var(--accent)" oninput="tonixDimInput(this.value)" onchange="tonixDimSave(this.value)">
+        <p style="font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5" data-i18n="dr_bgdim_note">Меньше — фон ярче. Карточки и текст остаются непрозрачными, поэтому всё читается.</p></div>
 </div>
 
 <!-- МОДАЛКА -->
@@ -1915,6 +1923,9 @@
     function buildLangMenu(){var m=document.getElementById('langMenu');if(!m)return;m.innerHTML='';LANGS.forEach(function(l){var b=document.createElement('button');b.textContent=l.n;if(l.c===curLang)b.className='on';b.onclick=function(){applyLang(l.c);m.classList.remove('open');};m.appendChild(b);});}
     function toggleLang(e){e.stopPropagation();document.getElementById('langMenu').classList.toggle('open');}
     document.addEventListener('click',function(){var m=document.getElementById('langMenu');if(m)m.classList.remove('open');});
+    /* Фон для телефона и затемнение фона DAO */
+    I18N.ru=Object.assign(I18N.ru||{},{"dr_bgm":"Фон для телефона","dr_bgm_note":"Вертикальная картинка (например 1080×2340). Если не загружена, на телефоне будет общий фон.","dr_bgdim":"Затемнение фона","dr_bgdim_note":"Меньше — фон ярче. Карточки и текст остаются непрозрачными, поэтому всё читается."});
+    I18N.en=Object.assign(I18N.en||{},{"dr_bgm":"Phone background","dr_bgm_note":"A vertical image (e.g. 1080×2340). If none is set, phones show the main background.","dr_bgdim":"Background dimming","dr_bgdim_note":"Lower = brighter background. Cards and text stay opaque, so everything stays readable."});
     function applyLang(code){curLang=code;try{localStorage.setItem('tonix_lang',code);}catch(e){}var d=I18N[code]||I18N.en||I18N.ru;
         document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.innerHTML=v;});
         document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.placeholder=v;});
@@ -3533,24 +3544,28 @@
     /* Применяем сохранённое оформление при открытии DAO */
     async function tonixApplyDaoSettings(key){
         try{
-            var r=await sb.from('dao_settings').select('rules,accent,bg_url,layout,avatar_url').eq('dao_key',key).limit(1);
-            if(r.error||!r.data||!r.data[0]) return;
+            /* '*' вместо списка полей: так страница не ломается, даже если
+               новые поля (bg_mobile_url, bg_dim) ещё не добавлены в базу. */
+            var r=await sb.from('dao_settings').select('*').eq('dao_key',key).limit(1);
+            if(r.error) return;
+            if(!r.data||!r.data[0]){
+                /* У этого DAO оформления нет — не оставляем фон предыдущего DAO */
+                tonixSetDaoBg(null,null); tonixApplyDim(null);
+                return;
+            }
             var s=r.data[0], sd=document.getElementById('s-dao');
             /* Держим оформление под рукой: при замене картинки нужно
                знать прежнюю ссылку, чтобы убрать старый файл. */
             window._tonixDaoLook=window._tonixDaoLook||{};
-            window._tonixDaoLook[key]={bg_url:s.bg_url||null,avatar_url:s.avatar_url||null};
+            window._tonixDaoLook[key]={bg_url:s.bg_url||null,bg_mobile_url:s.bg_mobile_url||null,avatar_url:s.avatar_url||null};
             /* Цвет акцента */
             if(sd){
                 if(s.accent){ sd.style.setProperty('--accent',s.accent); sd.style.setProperty('--accent2',s.accent); }
                 else{ sd.style.removeProperty('--accent'); sd.style.removeProperty('--accent2'); }
             }
-            /* Фон */
-            var bg=document.getElementById('daoBg');
-            if(bg&&sd){
-                if(s.bg_url){ bg.style.backgroundImage='url("'+s.bg_url+'")'; sd.classList.add('has-bg'); }
-                else{ bg.style.backgroundImage=''; sd.classList.remove('has-bg'); }
-            }
+            /* Фон: общий + отдельный для телефона, и сила затемнения */
+            tonixSetDaoBg(s.bg_url||null, s.bg_mobile_url||null);
+            tonixApplyDim(s.bg_dim);
             /* Интерфейс DAO */
             if(s.layout&&typeof setLayout==='function') setLayout(s.layout,true);
             /* Аватар DAO */
@@ -4228,46 +4243,77 @@
         /* и в базу — чтобы цвет пережил перезагрузку и был виден участникам */
         try{ tonixSaveDaoSettings({accent:c}, true); }catch(e){}
     }
-    async function loadBg(e){
-        var ru=(typeof curLang==='undefined'||curLang==='ru');
+    /* ═══ Фон DAO: общий (bg_url) и отдельный для телефона (bg_mobile_url) ═══
+       Картинки лежат в CSS-переменных --bg-d и --bg-m, а CSS сам выбирает
+       нужную по ориентации экрана. Пустое значение = картинки нет. */
+    function tonixSetDaoBg(desk, mob){
+        var bg=document.getElementById('daoBg'), sd=document.getElementById('s-dao');
+        if(!bg||!sd) return;
+        if(desk) bg.style.setProperty('--bg-d','url("'+desk+'")'); else bg.style.removeProperty('--bg-d');
+        if(mob)  bg.style.setProperty('--bg-m','url("'+mob+'")');  else bg.style.removeProperty('--bg-m');
+        sd.classList.toggle('has-bg', !!(desk||mob));
+    }
+    /* Затемнение поверх фона: 0 = фон как есть, 0.9 = почти не виден.
+       Пусто — стандартное значение из CSS (0.82). */
+    function tonixApplyDim(v){
+        var sc=document.getElementById('daoBgScrim');
+        var n=(v==null||v==='')?null:Math.max(0,Math.min(0.9,Number(v)));
+        if(sc){ if(n==null||isNaN(n)) sc.style.opacity=''; else sc.style.opacity=String(n); }
+        var pct=Math.round(((n==null||isNaN(n))?0.82:n)*100);
+        var rg=document.getElementById('bgDim'); if(rg) rg.value=pct;
+        var lb=document.getElementById('bgDimVal'); if(lb) lb.textContent=pct+'%';
+    }
+    function tonixDimInput(v){ tonixApplyDim(Number(v)/100); }
+    function tonixDimSave(v){ tonixSaveDaoSettings({bg_dim:Number(v)/100}); }
+
+    async function tonixUploadDaoBg(e, field){
         var f=e.target.files[0];if(!f)return;
         if(f.size>6*1024*1024){alert(T('g_img6'));return;}
+        var key=window._tonixDaoKey||curKey;
+        var look=((window._tonixDaoLook||{})[key])||{};
         /* Сразу показываем — не заставляем ждать загрузку */
         var rd=new FileReader();
         rd.onload=function(ev){
-            var bg=document.getElementById('daoBg');
-            if(bg)bg.style.backgroundImage='url('+ev.target.result+')';
-            var sd=document.getElementById('s-dao'); if(sd)sd.classList.add('has-bg');
+            var d=ev.target.result;
+            if(field==='bg_mobile_url') tonixSetDaoBg(look.bg_url||null, d);
+            else tonixSetDaoBg(d, look.bg_mobile_url||null);
         };
         rd.readAsDataURL(f);
         /* И кладём в хранилище, чтобы фон остался и увидели другие */
         try{
             if(!currentUID){alert(T('g_connect_first'));return;}
-            var key=window._tonixDaoKey||curKey;
-            var oldBg=(((window._tonixDaoLook||{})[key])||{}).bg_url||null;
-            var path=currentUID+'/dao_'+key+'_'+Date.now()+'.jpg';
+            var oldBg=look[field]||null;
+            var path=currentUID+'/dao_'+key+(field==='bg_mobile_url'?'_m_':'_')+Date.now()+'.jpg';
             var up=await sb.storage.from('dao-media').upload(path,f,{upsert:true,contentType:f.type||'image/jpeg'});
             if(up.error){alert((T('g_bg_fail'))+up.error.message);return;}
             var url=sb.storage.from('dao-media').getPublicUrl(path).data.publicUrl;
-            await tonixSaveDaoSettings({bg_url:url});
+            var patch={}; patch[field]=url;
+            var ok=await tonixSaveDaoSettings(patch);
+            if(!ok) return;
             window._tonixDaoLook=window._tonixDaoLook||{};
             window._tonixDaoLook[key]=window._tonixDaoLook[key]||{};
-            window._tonixDaoLook[key].bg_url=url;
+            window._tonixDaoLook[key][field]=url;
             if(oldBg&&oldBg!==url)tonixDropOld('dao-media',oldBg);
         }catch(x){alert((T('g_bg_err'))+(x&&x.message||''));}
     }
-    function clearBg(){
-        document.getElementById('s-dao').classList.remove('has-bg');
-        document.getElementById('daoBg').style.backgroundImage='';
+    function tonixClearDaoBg(field){
         var key=window._tonixDaoKey||curKey;
-        var old=(((window._tonixDaoLook||{})[key])||{}).bg_url||null;
-        try{ tonixSaveDaoSettings({bg_url:null}); }catch(e){}
+        var look=((window._tonixDaoLook||{})[key])||{};
+        var old=look[field]||null;
+        if(field==='bg_mobile_url') tonixSetDaoBg(look.bg_url||null, null);
+        else tonixSetDaoBg(null, look.bg_mobile_url||null);
+        var patch={}; patch[field]=null;
+        try{ tonixSaveDaoSettings(patch); }catch(e){}
         /* «Убрать» должно убирать и файл, а не только ссылку на него */
         if(old){
-            if(window._tonixDaoLook&&window._tonixDaoLook[key])window._tonixDaoLook[key].bg_url=null;
+            if(window._tonixDaoLook&&window._tonixDaoLook[key])window._tonixDaoLook[key][field]=null;
             tonixDropOld('dao-media',old);
         }
     }
+    function loadBg(e){ return tonixUploadDaoBg(e,'bg_url'); }
+    function clearBg(){ tonixClearDaoBg('bg_url'); }
+    function loadBgMob(e){ return tonixUploadDaoBg(e,'bg_mobile_url'); }
+    function clearBgMob(){ tonixClearDaoBg('bg_mobile_url'); }
 
     function dtab(name,el){
         if(name==='chat')setTimeout(tonixChatTabOpened,0);
