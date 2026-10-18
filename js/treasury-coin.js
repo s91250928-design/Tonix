@@ -35,13 +35,13 @@
             /* Сетка вкладки: монета слева, панель баланса справа, остальное — на всю ширину */
             /* Третья колонка 1fr — пустое место справа: панель баланса не шире ~520px,
                а блоки ниже (адрес казны, токены) по-прежнему на всю ширину */
-            "#d-treasury.on.tcoin-on{display:grid;grid-template-columns:auto minmax(0,520px) 1fr;column-gap:18px;align-items:start}",
+            "#d-treasury.on.tcoin-on{display:grid;grid-template-columns:1fr auto minmax(0,520px) 1fr;column-gap:28px;row-gap:16px;align-items:start}",
             "#d-treasury.tcoin-on>*{grid-column:1/-1}",
-            "#d-treasury.tcoin-on>.tcoin-stage{grid-column:1;grid-row:1}",
-            "#d-treasury.tcoin-on>.treas{grid-column:2;grid-row:1;min-height:var(--tc,156px);display:flex;flex-direction:column;justify-content:center}",
+            "#d-treasury.tcoin-on>.tcoin-stage{grid-column:2;grid-row:1}",
+            "#d-treasury.tcoin-on>.treas{grid-column:3;grid-row:1;align-self:center;margin-bottom:0;min-height:var(--tc,156px);display:flex;flex-direction:column;justify-content:center}",
             "#d-treasury.tcoin-on>.treas .v{overflow-wrap:anywhere}",
-            ".tcoin-stage{--tc:156px;align-self:center;position:relative;width:var(--tc);height:var(--tc);perspective:700px;pointer-events:none}",
-            "@media(max-width:560px){.tcoin-stage,#d-treasury.tcoin-on>.treas{--tc:124px}#d-treasury.on.tcoin-on{column-gap:12px;grid-template-columns:auto minmax(0,1fr)}#d-treasury.tcoin-on>.treas{padding:16px 14px}#d-treasury.tcoin-on>.treas .v{font-size:clamp(24px,8vw,40px);line-height:1.15}}",
+            ".tcoin-stage{--tc:184px;align-self:center;position:relative;width:var(--tc);height:var(--tc);perspective:700px;pointer-events:none}",
+            "@media(max-width:560px){.tcoin-stage,#d-treasury.tcoin-on>.treas{--tc:124px}#d-treasury.on.tcoin-on{column-gap:12px;row-gap:0;grid-template-columns:auto minmax(0,1fr)}#d-treasury.tcoin-on>.tcoin-stage{grid-column:1}#d-treasury.tcoin-on>.treas{grid-column:2;align-self:start;margin-bottom:16px}#d-treasury.tcoin-on>.treas{padding:16px 14px}#d-treasury.tcoin-on>.treas .v{font-size:clamp(24px,8vw,40px);line-height:1.15}}",
             /* свечение под монетой */
             ".tc-glow{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 45%,transparent),transparent 72%);opacity:.0;transition:opacity .6s}",
             ".tcoin-stage.tc-in .tc-glow{opacity:.85}",
