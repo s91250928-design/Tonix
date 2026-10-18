@@ -298,6 +298,19 @@
     .msg .mt .filechip{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-top:4px;color:var(--text);font-size:13px;text-decoration:none;max-width:230px}
     .msg .mt .filechip svg{width:18px;height:18px;flex:none;stroke:var(--accent);fill:none;stroke-width:2}
     .msg .mt audio{margin-top:4px;height:38px;max-width:230px}
+    /* Плашка «Редактирование» над полем ввода (как в Telegram) */
+    .ci-edit{display:flex;align-items:center;gap:12px;padding:8px 14px 6px;border-top:1px solid var(--border)}
+    .ci-edit-ic{width:20px;height:20px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .ci-edit-q{flex:1;min-width:0;border-left:2px solid var(--accent);padding:2px 0 2px 10px}
+    .ci-edit-h{font-size:12.5px;font-weight:700;color:var(--accent)}
+    .ci-edit.err .ci-edit-h{color:var(--bad,#e0554f)}
+    .ci-edit-t{font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ci-edit-x{flex:none;width:32px;height:32px;display:grid;place-items:center;background:none;border:0;border-radius:50%;cursor:pointer;color:var(--dim)}
+    .ci-edit-x:hover{color:var(--text);background:var(--surface2)}
+    .ci-edit-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+    .chat-input.editing .ci-btn{display:none}
+    .chat-input.editing input{border-color:var(--accent)}
+    .msg.msg-editing .mb{box-shadow:0 0 0 2px var(--accent2)}
     .ci-prev{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--border);font-size:13px;color:var(--dim)}
     .ci-prev img{width:38px;height:38px;border-radius:8px;object-fit:cover}
     .ci-prev .x{margin-left:auto;cursor:pointer;color:var(--dim);font-weight:700;padding:2px 6px}
@@ -1940,6 +1953,17 @@
     I18N.ja=Object.assign(I18N.ja||{},{"dr_bgm": "スマホ用の背景", "dr_bgm_note": "縦長の画像（例：1080×2340）。未設定の場合、スマホではメインの背景が表示されます。", "dr_bgdim": "背景の暗さ", "dr_bgdim_note": "小さいほど背景が明るくなります。カードと文字は不透明のままなので、読みやすさは保たれます。", "dr_tcoin": "トレジャリーのコイン", "dr_tcoin_note": "背景が透明な PNG（例：トークンの 3D レンダー）。未設定の場合は TON またはメイントークンのコインが表示されます。"});
     I18N.ar=Object.assign(I18N.ar||{},{"dr_bgm": "خلفية الهاتف", "dr_bgm_note": "صورة عمودية (مثلاً 1080×2340). إن لم تُرفع، يعرض الهاتف الخلفية الرئيسية.", "dr_bgdim": "تعتيم الخلفية", "dr_bgdim_note": "قيمة أقل = خلفية أكثر سطوعاً. تبقى البطاقات والنصوص معتمة، فيبقى كل شيء مقروءاً.", "dr_tcoin": "عملة الخزينة", "dr_tcoin_note": "صورة PNG بخلفية شفافة (مثل تصميم ثلاثي الأبعاد لرمزك). بدونها تظهر عملة TON أو عملة الرمز الرئيسي للخزينة."});
     I18N.hi=Object.assign(I18N.hi||{},{"dr_bgm": "फ़ोन के लिए बैकग्राउंड", "dr_bgm_note": "खड़ी तस्वीर (जैसे 1080×2340)। अगर नहीं लगाई, तो फ़ोन पर मुख्य बैकग्राउंड दिखेगा।", "dr_bgdim": "बैकग्राउंड का गहरापन", "dr_bgdim_note": "कम = ज़्यादा चमकीला बैकग्राउंड। कार्ड और टेक्स्ट अपारदर्शी रहते हैं, इसलिए सब आसानी से पढ़ा जा सकता है।", "dr_tcoin": "ट्रेज़री का सिक्का", "dr_tcoin_note": "पारदर्शी बैकग्राउंड वाली PNG (जैसे आपके टोकन का 3D रेंडर)। तस्वीर न हो तो TON या ट्रेज़री के मुख्य टोकन का सिक्का दिखेगा।"});
+    /* Правка сообщения в поле ввода — все 10 языков */
+    I18N.ru=Object.assign(I18N.ru||{},{"mm_editing": "Редактирование", "mm_save": "Сохранить"});
+    I18N.en=Object.assign(I18N.en||{},{"mm_editing": "Editing", "mm_save": "Save"});
+    I18N.es=Object.assign(I18N.es||{},{"mm_editing": "Editando", "mm_save": "Guardar"});
+    I18N.pt=Object.assign(I18N.pt||{},{"mm_editing": "Editando", "mm_save": "Salvar"});
+    I18N.fr=Object.assign(I18N.fr||{},{"mm_editing": "Modification", "mm_save": "Enregistrer"});
+    I18N.de=Object.assign(I18N.de||{},{"mm_editing": "Bearbeiten", "mm_save": "Speichern"});
+    I18N.zh=Object.assign(I18N.zh||{},{"mm_editing": "正在编辑", "mm_save": "保存"});
+    I18N.ja=Object.assign(I18N.ja||{},{"mm_editing": "編集中", "mm_save": "保存"});
+    I18N.ar=Object.assign(I18N.ar||{},{"mm_editing": "تعديل", "mm_save": "حفظ"});
+    I18N.hi=Object.assign(I18N.hi||{},{"mm_editing": "संपादन", "mm_save": "सहेजें"});
     function applyLang(code){curLang=code;try{localStorage.setItem('tonix_lang',code);}catch(e){}var d=I18N[code]||I18N.en||I18N.ru;
         document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.innerHTML=v;});
         document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');var v=(d[k]!=null)?d[k]:(I18N.en&&I18N.en[k]!=null?I18N.en[k]:I18N.ru[k]);if(v!=null)el.placeholder=v;});
@@ -4671,49 +4695,72 @@
             localStorage.removeItem('tonix_mtr_'+msgId+'_'+lang);
         }catch(e){}
     }
-    /* Правка на месте: текст превращается в поле ввода.
-       Enter — сохранить, Escape — отменить. */
+    /* Правка сообщения — как в Telegram: сообщение в ленте не трогаем,
+       весь его текст переезжает в поле ввода, над полем — плашка
+       «Редактирование» с исходным текстом и крестиком. Кнопка «Отправить»
+       становится «Сохранить». Enter — сохранить, Esc или ✕ — отменить.
+       Черновик, который был в поле до правки, возвращается после. */
     function tonixEditMsg(m, node){
-        var mt=node.querySelector('.mt'); if(!mt)return;
-        var tx=mt.querySelector('div:not(.msg-trtxt)'); if(!tx)return;
-        if(mt.querySelector('.msg-edit'))return; /* уже правим */
-        var ru=(typeof curLang==='undefined'||curLang==='ru');
-
-        var ta=document.createElement('textarea');
-        ta.className='msg-edit';
-        ta.value=m.text||'';
-        ta.rows=Math.min(6,Math.max(1,String(m.text||'').split('\n').length));
-        var hint=document.createElement('div');
-        hint.className='msg-edith';
-        hint.textContent=T('mm_edit_hint');
-
-        tx.style.display='none';
-        mt.insertBefore(ta,tx.nextSibling);
-        mt.insertBefore(hint,ta.nextSibling);
-        ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
-
-        function stop(){ ta.remove(); hint.remove(); tx.style.display=''; }
-        async function save(){
-            var val=ta.value.trim();
-            if(!val){ stop(); return; }
-            if(val===(m.text||'')){ stop(); return; }
-            ta.disabled=true; hint.textContent=T('mm_edit_saving');
-            var r=await editChatMessage(window._tonixChatId, m, val);
-            if(!r||!r.ok){
-                ta.disabled=false;
-                hint.textContent=(r&&r.code==='42501')?T('md_denied'):(T('mm_edit_failed')+((r&&r.error)||''));
-                return;
-            }
-            m.text=val;
-            stop();
-            tx.textContent=val;
-            tonixEditedMark(node);
+        var inp=document.getElementById('chatInp'); if(!inp)return;
+        if(window._tonixEditing) tonixEditStop();
+        var bar=document.getElementById('ciEdit');
+        if(!bar){
+            bar=document.createElement('div'); bar.id='ciEdit'; bar.className='ci-edit';
+            bar.innerHTML='<svg class="ci-edit-ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+
+                '<div class="ci-edit-q"><div class="ci-edit-h"></div><div class="ci-edit-t"></div></div>'+
+                '<button type="button" class="ci-edit-x" aria-label="Cancel"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+            var row=inp.closest('.chat-input'); row.parentNode.insertBefore(bar,row);
+            bar.querySelector('.ci-edit-x').onclick=function(){ tonixEditStop(); };
         }
-        ta.onkeydown=function(e){
-            if(e.key==='Escape'){ e.preventDefault(); stop(); }
-            else if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); save(); }
-        };
-        ta.onblur=function(){ setTimeout(function(){ if(ta.parentNode)save(); },120); };
+        bar.querySelector('.ci-edit-h').textContent=T('mm_editing');
+        bar.querySelector('.ci-edit-t').textContent=m.text||'';
+        bar.style.display='';
+        window._tonixEditing={m:m, node:node, chatId:window._tonixChatId, draft:inp.value};
+        node.classList.add('msg-editing');
+        var row2=inp.closest('.chat-input'); if(row2)row2.classList.add('editing');
+        var btn=document.querySelector('.chat-input>button[data-i18n="chat_send"]'); if(btn)btn.textContent=T('mm_save');
+        inp.value=m.text||'';
+        inp.focus(); try{ inp.setSelectionRange(inp.value.length,inp.value.length); }catch(e){}
+        if(!inp._tonixEscBound){
+            inp._tonixEscBound=true;
+            inp.addEventListener('keydown',function(e){
+                if(e.key==='Escape'&&window._tonixEditing){ e.preventDefault(); tonixEditStop(); }
+            });
+        }
+    }
+    function tonixEditStop(){
+        var ed=window._tonixEditing; window._tonixEditing=null;
+        var bar=document.getElementById('ciEdit'); if(bar){ bar.style.display='none'; bar.classList.remove('err'); }
+        var inp=document.getElementById('chatInp');
+        if(inp&&ed) inp.value=ed.draft||'';
+        if(ed){ document.querySelectorAll('.msg.msg-editing').forEach(function(n){ n.classList.remove('msg-editing'); }); }
+        var row=document.querySelector('.chat-input'); if(row)row.classList.remove('editing');
+        var btn=document.querySelector('.chat-input>button[data-i18n="chat_send"]'); if(btn)btn.textContent=T('chat_send');
+    }
+    async function tonixEditSave(){
+        var ed=window._tonixEditing; if(!ed)return;
+        var inp=document.getElementById('chatInp'); var bar=document.getElementById('ciEdit');
+        /* Пока правили, открыли другой чат — не сохраняем текст не туда */
+        if(window._tonixChatId!==ed.chatId){ tonixEditStop(); return; }
+        var val=(inp.value||'').trim();
+        if(!val){ inp.focus(); return; }                     /* пустым сообщение не оставляем */
+        if(val===(ed.m.text||'')){ tonixEditStop(); return; } /* ничего не поменяли */
+        if(ed.saving)return; ed.saving=true;
+        var h=bar&&bar.querySelector('.ci-edit-h'); if(h)h.textContent=T('mm_edit_saving');
+        var r=await editChatMessage(ed.chatId, ed.m, val);
+        ed.saving=false;
+        if(window._tonixEditing!==ed)return;                  /* за это время правку отменили */
+        if(!r||!r.ok){
+            if(bar)bar.classList.add('err');
+            if(h)h.textContent=(r&&r.code==='42501')?T('md_denied'):(T('mm_edit_failed')+((r&&r.error)||''));
+            return;
+        }
+        ed.m.text=val;
+        /* Ищем сообщение по id, а не по старому узлу: лента могла перерисоваться,
+           пока правили. Заодно убирается устаревший перевод и ставится «изменено». */
+        tonixApplyEdit(ed.m.id, val);
+        ed.draft='';                                          /* черновик не возвращаем поверх сохранённого */
+        tonixEditStop();
     }
 
     /* Меню действий над сообщением.
@@ -5349,6 +5396,8 @@
         }
     }
     function sendMsg(){
+        /* Идёт правка сообщения — кнопка и Enter сохраняют её, а не отправляют новое */
+        if(window._tonixEditing){ tonixEditSave(); return; }
         var i=document.getElementById('chatInp');var t=i.value.trim();
         if(!t&&!ciAttach)return;
         if(!window._tonixChatId||!currentUID){alert((curLang==='ru')?'Сначала вступи в DAO':'Join the DAO first');return;}
