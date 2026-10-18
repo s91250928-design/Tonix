@@ -18,7 +18,9 @@
       background-repeat:no-repeat;opacity:0;transition:opacity .3s;pointer-events:none;
       background-image:var(--bg-d,none)}
     /* Вертикальный экран (телефон): свой фон, если владелец его загрузил, иначе общий */
-    @media (orientation:portrait){.dao-bg{background-image:var(--bg-m,var(--bg-d,none))}}
+    /* и прижимаем его к верху: в Telegram экран ниже, чем в браузере, и при
+       выравнивании по центру верх картинки (там плашки) уезжал под шапку */
+    @media (orientation:portrait){.dao-bg{background-image:var(--bg-m,var(--bg-d,none));background-position:center top}}
     .dao-bg-scrim{position:fixed;inset:0;z-index:0;background:var(--bg);opacity:.35;display:none;pointer-events:none}
     #s-dao.has-bg .dao-bg{opacity:1}
     #s-dao.has-bg .dao-bg-scrim{display:block}
@@ -931,7 +933,7 @@
 <script src="js/auth.js?v=20260719-11"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
 <script src="js/treasury.js?v=20261018-2"></script>
-<script src="js/treasury-coin.js?v=20261018-1"></script>
+<script src="js/treasury-coin.js?v=20261018-2"></script>
 <script src="js/treasury-guide.js?v=20260721-4"></script>
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20260721-11"></script>
