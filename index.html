@@ -925,16 +925,17 @@
 <script src="js/config.js?v=20260719-11"></script>
 <script src="js/crypto.js?v=20260719-11"></script>
 <script src="js/supabase-init.js?v=20260719-11"></script>
+<script src="js/tonapi.js?v=20261018-1"></script>
 <script src="js/chat.js?v=20260722-3"></script>
 <script src="js/governance.js?v=20261013-1"></script>
 <script src="js/auth.js?v=20260719-11"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
-<script src="js/treasury.js?v=20261018-1"></script>
+<script src="js/treasury.js?v=20261018-2"></script>
 <script src="js/treasury-coin.js?v=20261018-1"></script>
 <script src="js/treasury-guide.js?v=20260721-4"></script>
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20260721-11"></script>
-<script src="js/treasury-tx.js?v=20260721-4"></script>
+<script src="js/treasury-tx.js?v=20261018-1"></script>
 <script src="js/daos-loader.js?v=20260719-11"></script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
 <script src="js/ton-core.bundle.js?v=20260719-11"></script>
@@ -3854,10 +3855,7 @@
         if(_tonixJettonMetaCache[k]!==undefined) return _tonixJettonMetaCache[k];
         try{
             var base=testnet?'https://testnet.tonapi.io':'https://tonapi.io';
-            var r=await fetch(base+'/v2/jettons/'+encodeURIComponent(addr),
-                {headers:{'Accept':'application/json'}});
-            if(!r.ok){ _tonixJettonMetaCache[k]=null; return null; }
-            var j=await r.json();
+            var j=await tonixTonapi(base+'/v2/jettons/'+encodeURIComponent(addr));
             var meta=(j&&j.metadata)||{};
             var sym=meta.symbol||j.symbol||null;
             var decRaw=(meta.decimals!=null)?meta.decimals:j.decimals;
@@ -3866,7 +3864,12 @@
             var res={sym:String(sym).slice(0,20), dec:dec};
             _tonixJettonMetaCache[k]=res;
             return res;
-        }catch(e){ _tonixJettonMetaCache[k]=null; return null; }
+        }catch(e){
+            /* Не запоминаем «нет данных», если tonapi просто был перегружен
+               или сеть моргнула, — иначе токен не определится до перезагрузки. */
+            if(e&&e.status===404) _tonixJettonMetaCache[k]=null;
+            return null;
+        }
     }
 
     /* Список «Главный токен казны»: TON (пустое значение) + токены из
@@ -3879,9 +3882,7 @@
         if(tre){
             try{
                 var base=cfg.testnet?'https://testnet.tonapi.io':'https://tonapi.io';
-                var r=await fetch(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons',
-                    {headers:{'Accept':'application/json'}});
-                var j=await r.json();
+                var j=await tonixTonapi(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons');
                 ((j&&j.balances)||[]).filter(function(b){return Number(b.balance)>0;})
                     .forEach(function(b){
                         var jt=b.jetton||{}; if(!jt.address)return;
@@ -3977,9 +3978,7 @@
             try{
                 var cfg=(TONIX_CONFIG.daoTreasury||{})[key]||{};
                 var base=cfg.testnet?'https://testnet.tonapi.io':'https://tonapi.io';
-                var r=await fetch(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons',
-                    {headers:{'Accept':'application/json'}});
-                var j=await r.json();
+                var j=await tonixTonapi(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons');
                 ((j&&j.balances)||[]).filter(function(b){return Number(b.balance)>0;})
                     .forEach(function(b){
                         var jt=b.jetton||{}; if(!jt.address)return;
@@ -4063,9 +4062,7 @@
             try{
                 var cfg=(TONIX_CONFIG.daoTreasury||{})[key]||{};
                 var base=cfg.testnet?'https://testnet.tonapi.io':'https://tonapi.io';
-                var r=await fetch(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons',
-                    {headers:{'Accept':'application/json'}});
-                var j=await r.json();
+                var j=await tonixTonapi(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons');
                 ((j&&j.balances)||[]).filter(function(b){return Number(b.balance)>0;})
                     .forEach(function(b){
                         var jt=b.jetton||{}; if(!jt.address)return;
@@ -5271,9 +5268,7 @@
 
         try{
             var base=cfg.testnet?'https://testnet.tonapi.io':'https://tonapi.io';
-            var r=await fetch(base+'/v2/accounts/'+encodeURIComponent(cfg.address)+'/jettons',
-                {headers:{'Accept':'application/json'}});
-            var j=await r.json();
+            var j=await tonixTonapi(base+'/v2/accounts/'+encodeURIComponent(cfg.address)+'/jettons');
             var list=((j&&j.balances)||[]).filter(function(b){return Number(b.balance)>0;});
             list.forEach(function(b){
                 var jt=b.jetton||{};

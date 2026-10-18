@@ -250,8 +250,7 @@
         var base = cfg.testnet ? "https://testnet.tonapi.io" : "https://tonapi.io";
         var url = base + "/v2/accounts/" + encodeURIComponent(cfg.address) + "/jettons";
 
-        fetch(url, { headers: { "Accept": "application/json" } })
-            .then(function (r) { return r.json(); })
+        tonixTonapi(url)   /* общий запрос: очередь + кеш, без 429 (js/tonapi.js) */
             .then(function (j) {
                 var list = (j && j.balances) || [];
                 /* Нулевые кошельки не показываем: они остаются после любого
@@ -346,9 +345,8 @@
                     if (!mainJet) return; /* TON остаётся главным */
                     var want = _normAddr(mainJet);
                     var base = cfg.testnet ? "https://testnet.tonapi.io" : "https://tonapi.io";
-                    return fetch(base + "/v2/accounts/" + encodeURIComponent(cfg.address) + "/jettons",
-                        { headers: { "Accept": "application/json" } })
-                        .then(function (r) { return r.json(); })
+                    /* тот же адрес, что и в списке токенов: ответ общий, второго запроса нет */
+                    return tonixTonapi(base + "/v2/accounts/" + encodeURIComponent(cfg.address) + "/jettons")
                         .then(function (j) {
                             var list = (j && j.balances) || [];
                             for (var i = 0; i < list.length; i++) {

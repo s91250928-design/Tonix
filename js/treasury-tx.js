@@ -266,8 +266,7 @@
         var url = base + "/v2/accounts/" + encodeURIComponent(cfg.address) + "/events?limit=30";
         var me = rawAddr(cfg.address);
 
-        return fetch(url, { headers: { "Accept": "application/json" } })
-            .then(function (r) { return r.json(); })
+        return tonixTonapi(url)   /* общая очередь tonapi (js/tonapi.js) */
             .then(function (j) {
                 var out = [];
                 var evs = (j && j.events) || [];
