@@ -1,7 +1,10 @@
 /* =====================================================
    TONIX — auth.js
-   Вход через TON-кошелёк: TON Connect → подпись (tonProof)
+   Вход через TON-кошелёк: TON Connect 5 → подпись (tonProof)
    → edge-функция ton-wallet-auth → сессия Supabase.
+   Порядок: сервер выдаёт одноразовый payload → кошелёк его подписывает →
+   сервер проверяет подпись по спецификации (адрес из walletStateInit,
+   ключ из walletStateInit или для кошелька Telegram — из блокчейна).
 
    Аккаунт создаётся
    автоматически при первом входе (это делает edge-функция).
@@ -23,19 +26,11 @@ async function initTonConnect() {
     tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
         manifestUrl: window.location.origin + '/tonconnect-manifest.json',
         buttonRootId: null,
-        // config.ton.org недоступен в ряде регионов → зеркало списка кошельков
-        walletsListSource: 'https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json',
-        walletsListConfiguration: {
-            includeWallets: [{
-                appName: "telegram-wallet",
-                name: "Wallet",
-                imageUrl: "https://wallet.tg/images/logo-288.png",
-                aboutUrl: "https://wallet.tg/",
-                universalLink: "https://t.me/wallet?attach=wallet",
-                bridgeUrl: "https://bridge.ton.space/bridge",
-                platforms: ["ios", "android", "macos", "windows", "linux"]
-            }]
-        }
+        // config.ton.org недоступен в ряде регионов → зеркало официального списка кошельков.
+        // Свою запись «telegram-wallet» больше не добавляем: в ней были устаревшие
+        // ссылка t.me/wallet и мост bridge.ton.space. Актуальные кошельки Telegram
+        // (Walt, встроенный кошелёк Telegram, Gram Wallet) приходят из официального списка.
+        walletsListSource: 'https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json'
     });
 
     // Кошелёк подключился → если это вход, проверяем подпись и получаем сессию
@@ -88,10 +83,14 @@ async function tonixConnectWallet() {
     } catch (e) { }
     try { if (ui.connected) await ui.disconnect(); } catch (e) { }
 
-    // Просим кошелёк подписать случайный challenge (гарантирует tonProof)
-    const bytes = new Uint8Array(32);
-    crypto.getRandomValues(bytes);
-    const payload = Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    // Одноразовую строку для подписи (payload) выдаёт сервер — так требует
+    // спецификация ton_proof: подпись нельзя переиграть или подделать заранее.
+    let payload;
+    try {
+        payload = await tonixGetProofPayload();
+    } catch (e) {
+        return { ok: false, error: 'Не удалось начать вход: ' + (e && e.message || 'сеть') };
+    }
     ui.setConnectRequestParameters({ state: 'ready', value: { tonProof: payload } });
 
     _tonixSignIn = true;
@@ -100,14 +99,33 @@ async function tonixConnectWallet() {
     return done;
 }
 
+// Адрес edge-функции входа
+function tonixAuthFnUrl() {
+    const supabaseUrl = sb.supabaseUrl || (sb.rest && sb.rest.url) || '';
+    return supabaseUrl.replace('/rest/v1', '') + '/functions/v1/ton-wallet-auth';
+}
+
+// --- Одноразовый payload для ton_proof (живёт 10 минут) ---
+async function tonixGetProofPayload() {
+    if (!sb) throw new Error('Supabase не готов');
+    const anonKey = sb.supabaseKey || '';
+    const res = await fetch(tonixAuthFnUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anonKey, 'apikey': anonKey },
+        body: JSON.stringify({ action: 'challenge' })
+    });
+    const data = await res.json().catch(function () { return {}; });
+    if (!res.ok || !data.payload) throw new Error(data.error || ('HTTP ' + res.status));
+    return data.payload;
+}
+
 // --- Подпись кошелька → сессия Supabase ---
 async function tonWalletAuth(wallet, proof) {
     try {
         if (!sb) return { ok: false, error: 'Supabase не готов' };
         if (!wallet || !wallet.account || !proof) return { ok: false, error: 'Невалидные параметры' };
 
-        const supabaseUrl = sb.supabaseUrl || (sb.rest && sb.rest.url) || '';
-        const url = supabaseUrl.replace('/rest/v1', '') + '/functions/v1/ton-wallet-auth';
+        const url = tonixAuthFnUrl();
         const anonKey = sb.supabaseKey || '';
 
         const res = await fetch(url, {
@@ -119,7 +137,10 @@ async function tonWalletAuth(wallet, proof) {
             },
             body: JSON.stringify({
                 address: wallet.account.address,
-                publicKey: wallet.account.publicKey,
+                // publicKey есть не у всех кошельков (у кошелька Telegram его нет) —
+                // сервер берёт ключ сам из walletStateInit или из блокчейна
+                publicKey: wallet.account.publicKey || null,
+                walletStateInit: wallet.account.walletStateInit,
                 proof: proof,
                 network: wallet.account.chain
             })
