@@ -325,13 +325,13 @@ async function handler(req: Request): Promise<Response> {
             crypto.getRandomValues(bytes);
             const payload = bytesToHex(bytes);
             const expires = new Date(Date.now() + CHALLENGE_TTL_SEC * 1000).toISOString();
-            const ins = await db.from("ton_proof_challenges").insert({ payload, expires_at: expires });
+            const ins = await db.from("tonix_login_challenges").insert({ payload, expires_at: expires });
             if (ins.error) {
                 console.error("[ton-wallet-auth] challenge insert:", JSON.stringify(ins.error));
                 return json(500, { error: "challenge-failed" });
             }
             // Заодно чистим просроченные (не критично, если не выйдет)
-            try { await db.from("ton_proof_challenges").delete().lt("expires_at", new Date().toISOString()); } catch (_) { /* */ }
+            try { await db.from("tonix_login_challenges").delete().lt("expires_at", new Date().toISOString()); } catch (_) { /* */ }
             return json(200, { payload });
         }
 
@@ -343,7 +343,7 @@ async function handler(req: Request): Promise<Response> {
 
         // Payload должен быть выдан нами, не просрочен и использоваться один раз.
         // Один запрос DELETE … RETURNING: два одновременных входа с одним payload невозможны.
-        const used = await db.from("ton_proof_challenges")
+        const used = await db.from("tonix_login_challenges")
             .delete()
             .eq("payload", String(proof.payload || ""))
             .gt("expires_at", new Date().toISOString())
