@@ -951,7 +951,7 @@
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20260721-11"></script>
 <script src="js/treasury-tx.js?v=20261018-1"></script>
-<script src="js/daos-loader.js?v=20260719-11"></script>
+<script src="js/daos-loader.js?v=20261021-1"></script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
 <script src="js/ton-core.bundle.js?v=20260719-11"></script>
 <script src="js/multisig-deploy.js?v=20261009-2"></script>
@@ -2681,7 +2681,8 @@
         var lg=document.getElementById('dhLogo');lg.textContent=d.logo;lg.style.background='linear-gradient(135deg,'+d.grad+')';
         document.getElementById('dhName').textContent=d.name;
         document.getElementById('dhHandle').textContent=d.handle;
-        document.getElementById('dhMembers').textContent=d.members+' '+((I18N[curLang]||I18N.en||I18N.ru).unit_members||'участников');
+        /* Число из памяти (каталог уже посчитал) — сразу; не знаем — прочерк, свежее число подставит tonixRefreshMembers */
+        tonixSetMemberCount((typeof d.members==='number'&&d.members>0)?d.members:null);
         document.getElementById('dhVerified').style.display=d.verified?'inline-flex':'none';
         (function(){ var dv=document.getElementById('dhVerified'); if(!dv)return; var uv=document.getElementById('dhUnverified');
             if(!uv){ uv=document.createElement('span'); uv.id='dhUnverified'; uv.style.cssText='color:#e0a458;font-size:12px;font-weight:600;margin-left:6px;white-space:nowrap'; uv.textContent='\u26a0 '+((curLang!=='ru')?'not verified':'не проверено'); dv.parentNode.insertBefore(uv, dv.nextSibling); }
@@ -2704,7 +2705,6 @@
         tonixRecheckOwner(key);
         document.getElementById('dhDesc').textContent=(curLang!=='ru'&&d.descEn)?d.descEn:d.desc;
         var _tags=((curLang!=='ru'&&d.tagsEn)?d.tagsEn:d.tags)||[];document.getElementById('dhTags').innerHTML=_tags.map(function(t){return '<span class="gtag">'+t+'</span>';}).join('');
-        document.getElementById('dhM1').textContent=d.members;
         /* Баланс казны не берём из демо-данных: настоящую цифру подставит
            treasury.js после ответа блокчейна. До ответа — прочерк, а не
            выдуманные 12.4K, которые пугали на медленном телефоне. */
@@ -2733,7 +2733,7 @@
         }
         var dsl=document.getElementById('dsLogo');dsl.textContent=d.logo;dsl.style.background='linear-gradient(135deg,'+d.grad+')';
         document.getElementById('dsName').textContent=d.name;
-        document.getElementById('chatCount').textContent=d.members+' '+((I18N[curLang]||I18N.en||I18N.ru).unit_members||'участников');
+        (function(){var _u=((I18N[curLang]||I18N.en||I18N.ru).unit_members||'участников');var _n=(typeof d.members==='number')?d.members:'—';document.getElementById('chatCount').textContent=_n+' '+_u;})();
         var ca=document.getElementById('chatAv');ca.textContent=d.logo;ca.style.background='linear-gradient(135deg,'+d.grad+')';
         /* Аватар DAO из каталога — чтобы шапка не мигала буквами перед ответом базы */
         try{ if(d.avatarUrl) tonixApplyDaoAvatar(d.avatarUrl); else tonixApplyDaoAvatar(null); }catch(e){}
@@ -2769,7 +2769,7 @@
         /* Финальная сверка с базой: если строки в user_chats нет — доступа нет,
            сколько бы меток ни лежало в браузере. */
         try{ tonixVerifyMembership(key, d.owner); }catch(e){}
-        try{ setTimeout(tonixRefreshMembers, 600); }catch(e){}
+        try{ tonixRefreshMembers(); }catch(e){}   /* сразу, без задержки: функция видна и гостям */
         try{ setTimeout(tonixRenderMembers, 650); }catch(e){}
         try{ tonixApplyDaoSettings(key); }catch(e){}
         try{ if(d.owner) tonixLoadGateSettings(key); }catch(e){}
@@ -2898,28 +2898,45 @@
         }catch(e){}
     }
 
-    /* Участников считаем по факту — строкам user_chats этого чата,
-       а не по статическому полю в карточке DAO. */
+    /* Число участников в шапке DAO, на обзоре и в чате. null = ещё не знаем → прочерк, а не «0» */
+    function tonixSetMemberCount(n){
+        var unit=((I18N[curLang]||I18N.en||I18N.ru).unit_members||'участников');
+        var shown=(typeof n==='number')?String(n):'—';
+        var a=document.getElementById('dhMembers'); if(a)a.textContent=shown+' '+unit;
+        var b=document.getElementById('dhM1'); if(b)b.textContent=shown;
+        var c=document.getElementById('chatCount'); if(c)c.textContent=shown+' '+unit;
+    }
+    window.tonixSetMemberCount=tonixSetMemberCount;
+
+    /* Участников считаем по факту — строкам user_chats этого чата.
+       Через функцию tonix_member_counts: её видят все, включая гостей и
+       ещё не вступивших (прямой запрос к user_chats им отдавал 0 из-за
+       правил доступа). Если функции в базе ещё нет — прежний способ. */
     async function tonixRefreshMembers(){
         try{
             var key=window._tonixDaoKey; if(!key) return;
-            var cid=window._tonixChatId||((typeof TONIX_CONFIG!=='undefined'&&TONIX_CONFIG.daoChats)?TONIX_CONFIG.daoChats[key]:null);
-            if(!cid){
-                try{
-                    var dq=await sb.from('daos').select('chat_id').eq('slug',key).limit(1);
-                    cid=(dq&&dq.data&&dq.data[0])?dq.data[0].chat_id:null;
-                    if(cid&&typeof TONIX_CONFIG!=='undefined'){TONIX_CONFIG.daoChats=TONIX_CONFIG.daoChats||{};TONIX_CONFIG.daoChats[key]=cid;}
-                }catch(e){}
+            var n=null;
+            var rc=await sb.rpc('tonix_member_counts',{p_slug:key});
+            if(rc&&!rc.error&&rc.data&&rc.data[0]){
+                n=Number(rc.data[0].members);
+            }else{
+                var cid=window._tonixChatId||((typeof TONIX_CONFIG!=='undefined'&&TONIX_CONFIG.daoChats)?TONIX_CONFIG.daoChats[key]:null);
+                if(!cid){
+                    try{
+                        var dq=await sb.from('daos').select('chat_id').eq('slug',key).limit(1);
+                        cid=(dq&&dq.data&&dq.data[0])?dq.data[0].chat_id:null;
+                        if(cid&&typeof TONIX_CONFIG!=='undefined'){TONIX_CONFIG.daoChats=TONIX_CONFIG.daoChats||{};TONIX_CONFIG.daoChats[key]=cid;}
+                    }catch(e){}
+                }
+                if(!cid) return;
+                var r=await sb.from('user_chats').select('user_id',{count:'exact',head:true}).eq('chat_id',cid);
+                if(r&&r.error) return;
+                if(r&&typeof r.count==='number') n=r.count;
             }
-            if(!cid) return;
-            var r=await sb.from('user_chats').select('user_id',{count:'exact',head:true}).eq('chat_id',cid);
-            if(r&&r.error) return;
-            var n=(r&&typeof r.count==='number')?r.count:null;
-            if(n===null) return;
-            var unit=((I18N[curLang]||I18N.en||I18N.ru).unit_members||'участников');
-            var a=document.getElementById('dhMembers'); if(a)a.textContent=n+' '+unit;
-            var b=document.getElementById('dhM1'); if(b)b.textContent=n;
-            var c=document.getElementById('chatCount'); if(c)c.textContent=n+' '+unit;
+            if(n===null||isNaN(n)) return;
+            if(window._tonixDaoKey!==key) return;          /* пока ждали, открыли другое DAO */
+            if(typeof DAOS!=='undefined'&&DAOS[key]) DAOS[key].members=n;   /* запомнили — при повторном открытии сразу верно */
+            tonixSetMemberCount(n);
         }catch(e){}
     }
 

@@ -93,7 +93,7 @@
             logo: row.logo || ex.logo || (row.name ? row.name.slice(0, 2).toUpperCase() : "DA"),
             grad: row.grad || ex.grad || "#2d83ec,#1ac9ff",
             avatarUrl: row.avatar_url || ex.avatarUrl || null,
-            members: (ex.members != null ? ex.members : 0),
+            members: (typeof ex.members === "number" && ex.members > 0 ? ex.members : null), /* реальное число подставит tonix_member_counts */
             treasury: ex.treasury || "—",
             treasuryFull: ex.treasuryFull || "",
             trust: (ex.trust != null ? ex.trust : 0),
@@ -131,6 +131,23 @@
         }
     }
 
+    /* Число участников всех DAO одним запросом — заранее, до открытия DAO,
+       чтобы в шапке сразу стояло верное число, а не «0» */
+    function loadMemberCounts() {
+        try {
+            sb.rpc("tonix_member_counts").then(function (res) {
+                if (!res || res.error || !res.data) return;   /* функции ещё нет — DAO досчитает само при открытии */
+                res.data.forEach(function (x) {
+                    if (DAOS[x.slug]) DAOS[x.slug].members = Number(x.members);
+                });
+                var open = window._tonixDaoKey;
+                if (open && DAOS[open] && typeof window.tonixSetMemberCount === "function") {
+                    window.tonixSetMemberCount(DAOS[open].members);
+                }
+            });
+        } catch (e) { }
+    }
+
     window.tonixLoadDaos = function () {
         if (typeof sb === "undefined" || !sb) { console.warn("[daos] база не готова"); return; }
         sb.from("daos").select("*").eq("status", "approved")
@@ -150,6 +167,7 @@
                             applyRow(rows[i]);
                         }
                         if (typeof filterDaos === "function" && document.getElementById("daoGrid")) filterDaos();
+                        loadMemberCounts();
                     })
                     .catch(function () {
                         /* Без аватаров каталог всё равно должен открыться */
