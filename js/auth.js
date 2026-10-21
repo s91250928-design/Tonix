@@ -146,7 +146,11 @@ async function tonWalletAuth(wallet, proof) {
             })
         });
         const data = await res.json();
-        if (!res.ok) return { ok: false, error: data.error || ('HTTP ' + res.status) };
+        if (!res.ok) {
+            // reason — короткий код причины от сервера (например wallettg-inactive), пишем в консоль для разбора
+            if (data.reason) console.warn('[TON] вход отклонён сервером:', data.reason);
+            return { ok: false, error: data.error || ('HTTP ' + res.status), reason: data.reason || null };
+        }
 
         // Применяем сессию — с этого момента пользователь «вошёл»
         if (data.access_token && data.refresh_token) {

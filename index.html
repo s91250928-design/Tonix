@@ -943,7 +943,7 @@
 <script src="js/tonapi.js?v=20261018-1"></script>
 <script src="js/chat.js?v=20260722-3"></script>
 <script src="js/governance.js?v=20261013-1"></script>
-<script src="js/auth.js?v=20261021-1"></script>
+<script src="js/auth.js?v=20261021-2"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
 <script src="js/treasury.js?v=20261018-2"></script>
 <script src="js/treasury-coin.js?v=20261018-4"></script>
@@ -2002,7 +2002,11 @@
                    показываем мягкой карточкой, а не системной плашкой. */
                 var e=String(res.error||'');
                 var msg;
-                if(/auth-retry|temporarily|временно|not prove|подпись/i.test(e))
+                /* Новый сервер входа сам присылает понятную причину (reason + текст) —
+                   показываем её как есть, а не общую фразу */
+                if(res.reason&&res.error)
+                    msg=String(res.error);
+                else if(/auth-retry|temporarily|временно|not prove|подпись/i.test(e))
                     msg=ru?'Вход не прошёл с первого раза. Попробуй ещё раз через пару секунд.'
                           :'Sign-in did not go through. Try again in a couple of seconds.';
                 else if(/already been registered|already registered/i.test(e))
@@ -2508,7 +2512,9 @@
         if(!host){
             host=document.createElement('div');
             host.id='tonixNoticeHost';
-            host.style.cssText='position:fixed;left:0;right:0;bottom:22px;z-index:9999;'+
+            /* Сверху по центру, под шапкой: внизу экрана Telegram показывает
+               свои плашки кошелька, и наше сообщение пряталось под ними */
+            host.style.cssText='position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 72px);z-index:9999;'+
                 'display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none';
             document.body.appendChild(host);
         }
@@ -2517,13 +2523,13 @@
         card.style.cssText='pointer-events:auto;max-width:440px;width:calc(100% - 32px);'+
             'background:var(--surface);border:1px solid var(--border);border-left:3px solid '+col+';'+
             'border-radius:12px;padding:12px 15px;box-shadow:0 12px 40px rgba(0,0,0,.4);'+
-            'opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s';
+            'opacity:0;transform:translateY(-10px);transition:opacity .2s,transform .2s';
         card.innerHTML='<div style="font-size:14px;font-weight:600;color:var(--text)">'+tonixEsc(title)+'</div>'+
             (text?'<div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">'+tonixEsc(text)+'</div>':'');
         host.appendChild(card);
         requestAnimationFrame(function(){card.style.opacity=1;card.style.transform='none';});
         setTimeout(function(){
-            card.style.opacity=0;card.style.transform='translateY(10px)';
+            card.style.opacity=0;card.style.transform='translateY(-10px)';
             setTimeout(function(){card.remove();},250);
         }, kind==='bad'?5200:3400);
     }

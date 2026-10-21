@@ -113,7 +113,7 @@ function concat(...parts: Uint8Array[]): Uint8Array {
 // Блокчейн (toncenter): состояние аккаунта и геттер get_public_key
 // =====================================================================
 type ChainApi = {
-    accountState(address: string, testnet: boolean): Promise<{ active: boolean; codeHash: string | null }>;
+    accountState(address: string, testnet: boolean): Promise<{ active: boolean; frozen?: boolean; codeHash: string | null }>;
     getPublicKey(address: string, testnet: boolean): Promise<Uint8Array>;
 };
 
@@ -140,7 +140,7 @@ export function toncenterApi(apiKey?: string): ChainApi {
             if (active && res.code) {
                 codeHash = Cell.fromBoc(Buffer.from(res.code, "base64"))[0].hash().toString("hex");
             }
-            return { active, codeHash };
+            return { active, frozen: res && res.state === "frozen", codeHash };
         },
         async getPublicKey(address, testnet) {
             const res = await call(testnet, "/runGetMethod", {
@@ -231,10 +231,26 @@ export async function verifyTonProof(
             // но только если аккаунт активен и его код — тот же трамплин.
             const raw = addr.toRawString();
             const st = await opts.chain.accountState(raw, testnet);
-            if (!st.active) return { ok: false, reason: "wallettg-inactive" };
-            if (st.codeHash !== WALLET_TG_TRAMPOLINE_HASH) return { ok: false, reason: "wallettg-code-mismatch" };
-            key = await opts.chain.getPublicKey(raw, testnet);
-            walletName = "WalletTg";
+            if (st.frozen) return { ok: false, reason: "wallettg-frozen" };
+            if (st.active) {
+                // Кошелёк уже в сети: ключ мог смениться — берём живой ключ геттером
+                if (st.codeHash !== WALLET_TG_TRAMPOLINE_HASH) return { ok: false, reason: "wallettg-code-mismatch" };
+                key = await opts.chain.getPublicKey(raw, testnet);
+                walletName = "WalletTg";
+            } else {
+                // Кошелёк ещё не развёрнут (на него только приходили деньги, исходящих
+                // транзакций не было). Сменить ключ без развёртывания нельзя, значит
+                // действующий ключ — anchor-ключ из StateInit, а сам StateInit уже сверен
+                // с адресом (шаг 5). Раскладка data из документации WalletTg:
+                // revision(8) · uint32 · subwallet_id(32) · anchor_pubkey(256).
+                // Документация описывает только активные аккаунты; для неразвёрнутых
+                // это наш вывод: подпись всё равно должна сойтись с ключом, зашитым в адрес.
+                const d = stateInit.data.beginParse();
+                if (d.remainingBits < 328) return { ok: false, reason: "wallettg-bad-data" };
+                d.skip(72);
+                key = new Uint8Array(d.loadBuffer(32));
+                walletName = "WalletTg (не развёрнут)";
+            }
         } else {
             return { ok: false, reason: "unsupported-wallet" };
         }
@@ -286,8 +302,9 @@ function userMessage(reason: string): string {
         case "challenge-unknown":
         case "proof-expired":
             return "Запрос на вход устарел. Нажми «Войти» ещё раз.";
-        case "wallettg-inactive":
-            return "Кошелёк Telegram ещё не активирован в сети. Сделай в нём любую транзакцию (например, получи немного TON) и попробуй снова.";
+        case "wallettg-code-mismatch":
+        case "wallettg-bad-data":
+            return "Не удалось распознать кошелёк Telegram. Попробуй ещё раз или войди другим кошельком.";
         case "unsupported-wallet":
             return "Этот тип кошелька пока не поддерживается. Попробуй Telegram Wallet, Tonkeeper или MyTonWallet.";
         case "bad-domain":
