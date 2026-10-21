@@ -15,6 +15,7 @@
 let tonConnectUI = null;
 let _tonixSignIn = false;      // флаг: идёт вход (а не другая операция)
 let _tonixAuthResolve = null;  // промис входа: разрешается после успеха
+let _tonixAuthBusy = false;    // идёт проверка подписи на сервере (защита от двойного входа)
 
 // --- Инициализация TON Connect (один раз при загрузке) ---
 async function initTonConnect() {
@@ -33,16 +34,38 @@ async function initTonConnect() {
         walletsListSource: 'https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json'
     });
 
-    // Кошелёк подключился → если это вход, проверяем подпись и получаем сессию
-    tonConnectUI.onStatusChange(async function (wallet) {        if (!wallet || !_tonixSignIn) return;
-        _tonixSignIn = false;
+    // Кошелёк подключился (или подключение восстановилось при загрузке страницы)
+    tonConnectUI.onStatusChange(async function (wallet) {
+        if (!wallet) return;
         const proofItem = wallet.connectItems && wallet.connectItems.tonProof;
-        if (!proofItem || !('proof' in proofItem)) {
+        const hasProof = !!(proofItem && 'proof' in proofItem);
+
+        if (!_tonixSignIn) {
+            /* Это не наш вход: например, восстановилось прошлое подключение или
+               телефон перезагрузил страницу, пока человек подтверждал вход в кошельке.
+               Кошелёк НЕ отключаем (раньше здесь кошелёк получал «disconnect request»).
+               Если пришла свежая подпись, а мы ещё не вошли, — входим по ней. */
+            const fresh = hasProof && proofItem.proof &&
+                (Math.floor(Date.now() / 1000) - Number(proofItem.proof.timestamp)) < 9 * 60;
+            if (fresh && !currentUID && !_tonixAuthBusy) {
+                _tonixAuthBusy = true;
+                const r = await tonWalletAuth(wallet, proofItem.proof);
+                _tonixAuthBusy = false;
+                if (r.ok) { currentUID = r.user_id; _finishAuth(r); }
+            }
+            return;
+        }
+
+        // Наш вход: кнопка «Войти» уже ждёт результат
+        _tonixSignIn = false;
+        if (!hasProof) {
             _finishAuth({ ok: false, error: 'Кошелёк не вернул подпись (tonProof)' });
             try { await tonConnectUI.disconnect(); } catch (e) { }
             return;
         }
+        _tonixAuthBusy = true;
         const result = await tonWalletAuth(wallet, proofItem.proof);
+        _tonixAuthBusy = false;
         if (result.ok) {
             currentUID = result.user_id;
         } else {
@@ -75,12 +98,13 @@ async function tonixConnectWallet() {
     const ui = await initTonConnect();
     if (!ui) return { ok: false, error: 'TON Connect не готов, перезагрузите страницу' };
 
-    // Чистим мусор прошлых сессий TonConnect
-    try {
-        Object.keys(localStorage)
-            .filter(function (k) { return k.indexOf('ton-connect-') === 0; })
-            .forEach(function (k) { localStorage.removeItem(k); });
-    } catch (e) { }
+    /* Сначала ждём, пока TON Connect восстановит прошлое подключение (если было).
+       Раньше мы этого не ждали и стирали его записи прямо во время восстановления:
+       восстановленный кошелёк (без подписи) приходил посреди входа, считался
+       ошибкой — кошелёк получал «disconnect request», сайт показывал «не удалось»,
+       а потом всё-таки подключался. */
+    try { await ui.connectionRestored; } catch (e) { }
+    // Подпись (tonProof) кошелёк даёт только при новом подключении — старое закрываем
     try { if (ui.connected) await ui.disconnect(); } catch (e) { }
 
     // Одноразовую строку для подписи (payload) выдаёт сервер — так требует
@@ -95,8 +119,20 @@ async function tonixConnectWallet() {
 
     _tonixSignIn = true;
     const done = new Promise(function (resolve) { _tonixAuthResolve = resolve; });
+    // Человек закрыл окно выбора кошелька, ничего не выбрав, — тихо отменяем вход
+    let unsub = null;
+    try {
+        unsub = ui.onModalStateChange(function (st) {
+            if (st && st.status === 'closed' && st.closeReason === 'action-cancelled' && _tonixSignIn) {
+                _tonixSignIn = false;
+                _finishAuth({ ok: false, cancelled: true });
+            }
+        });
+    } catch (e) { }
     await ui.openModal();
-    return done;
+    const result = await done;
+    try { if (unsub) unsub(); } catch (e) { }
+    return result;
 }
 
 // Адрес edge-функции входа

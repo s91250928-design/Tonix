@@ -943,7 +943,7 @@
 <script src="js/tonapi.js?v=20261018-1"></script>
 <script src="js/chat.js?v=20260722-3"></script>
 <script src="js/governance.js?v=20261013-1"></script>
-<script src="js/auth.js?v=20261021-2"></script>
+<script src="js/auth.js?v=20261021-3"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
 <script src="js/treasury.js?v=20261018-2"></script>
 <script src="js/treasury-coin.js?v=20261018-4"></script>
@@ -4175,7 +4175,7 @@
             if(!currentUID){try{await ensureAuth();}catch(e){}}
             if(!currentUID){
                 var res=await tonixConnectWallet();
-                if(!res||!res.ok){alert((res&&res.error)||'Не удалось привязать кошелёк');if(btn){btn.disabled=false;btn.textContent=T('jn_btn');}return;}
+                if(!res||!res.ok){if(!(res&&res.cancelled))alert((res&&res.error)||'Не удалось привязать кошелёк');if(btn){btn.disabled=false;btn.textContent=T('jn_btn');}return;}
             }
             /* 1.5 Проверка условий входа на СЕРВЕРЕ (токен-гейт).
                    Баланс читает edge-функция по кошельку из проверенной сессии —
