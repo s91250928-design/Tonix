@@ -3311,20 +3311,43 @@
                     }
                 }catch(e){}
             }
-            if(!cid){ box.innerHTML='<p>'+T('mem_nochat')+'</p>'; return; }
+            /* Публичный список: функция tonix_dao_members отдаёт участников всем,
+               включая гостей (кошелёк, ник, аватар — как в Aragon). Прямой запрос
+               к user_chats гостям возвращал пустоту из-за правил доступа.
+               Нет функции в базе — прежний способ. */
+            var uids=[], wal={}, pub={};
+            var rm=null;
+            try{ rm=await sb.rpc('tonix_dao_members',{p_slug:key}); }catch(e){ rm=null; }
+            if(rm&&!rm.error&&Array.isArray(rm.data)){
+                rm.data.forEach(function(x){
+                    if(!x||!x.user_id) return;
+                    uids.push(x.user_id);
+                    if(x.wallet_address) wal[x.user_id]=x.wallet_address;
+                    pub[x.user_id]={user_id:x.user_id,nickname:x.nickname||null,avatar_url:x.avatar_url||null};
+                });
+                if(!uids.length){ box.innerHTML='<p>'+T('mem_empty')+'</p>'; return; }
+                await tonixGetProfiles(uids);
+                /* Профиль не прочитался напрямую (гость) — берём ник и аватар из публичного списка */
+                uids.forEach(function(u){ if(!window._tonixProfiles[u]) window._tonixProfiles[u]=pub[u]; });
+            }else{
+                if(!cid){ box.innerHTML='<p>'+T('mem_nochat')+'</p>'; return; }
+                var r=await sb.from('user_chats').select('user_id').eq('chat_id',cid);
+                if(r.error){ box.innerHTML='<p>'+T('mem_failed')+tonixEsc(r.error.message)+'</p>'; return; }
+                uids=(r.data||[]).map(function(x){return x.user_id;}).filter(Boolean);
+                if(!uids.length){ box.innerHTML='<p>'+T('mem_empty')+'</p>'; return; }
 
-            var r=await sb.from('user_chats').select('user_id').eq('chat_id',cid);
-            if(r.error){ box.innerHTML='<p>'+T('mem_failed')+tonixEsc(r.error.message)+'</p>'; return; }
-            var uids=(r.data||[]).map(function(x){return x.user_id;}).filter(Boolean);
-            if(!uids.length){ box.innerHTML='<p>'+T('mem_empty')+'</p>'; return; }
-
-            await tonixGetProfiles(uids);
-            /* Кошельки: показываем адрес рядом с именем — это язык нашей аудитории */
-            var wal={};
-            try{
-                var w=await sb.from('user_wallets').select('user_id,wallet_address').in('user_id',uids);
-                (w&&w.data?w.data:[]).forEach(function(x){ wal[x.user_id]=x.wallet_address; });
-            }catch(e){}
+                await tonixGetProfiles(uids);
+                /* Кошельки: показываем адрес рядом с именем — это язык нашей аудитории */
+                try{
+                    var w=await sb.from('user_wallets').select('user_id,wallet_address').in('user_id',uids);
+                    (w&&w.data?w.data:[]).forEach(function(x){ wal[x.user_id]=x.wallet_address; });
+                }catch(e){}
+            }
+            /* Список — самый точный счётчик: число в шапке совпадает со списком */
+            if(window._tonixDaoKey===key){
+                if(typeof DAOS!=='undefined'&&DAOS[key]) DAOS[key].members=uids.length;
+                tonixSetMemberCount(uids.length);
+            }
 
             /* Моя роль в этом DAO и список админов — от них зависит, у кого
                показывать кнопку удаления. Право всё равно перепроверит
