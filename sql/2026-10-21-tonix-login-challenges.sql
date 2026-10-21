@@ -1,7 +1,7 @@
 -- Tonix · 2026-10-21
 -- Одноразовые запросы на вход (payload для ton_proof).
 -- Нужна для новой версии функции ton-wallet-auth (TON Connect 5).
--- Своё имя таблицы: в базе уже есть ton_proof_challenges другого приложения (с user_id), её не трогаем.
+-- Отдельная таблица Tonix (имя ton_proof_challenges в базе уже занято другим сервисом).
 -- Выполнить один раз в Supabase → SQL Editor ДО обновления функции. Повторный запуск безопасен.
 
 create table if not exists public.tonix_login_challenges (

@@ -23,15 +23,14 @@
 //   Дальше — как раньше: детерминированные email/пароль из адреса,
 //   вход или создание пользователя, сессия Supabase.
 //
-// ЧТО БЫЛО НЕ ТАК В ПРЕЖНЕЙ ВЕРСИИ:
-//   - ключ для проверки подписи брался из запроса клиента и никак не
-//     сверялся с адресом → можно было подписать своим ключом чужой адрес;
-//   - кошелёк Telegram не присылает publicKey → вход отклонялся всегда
-//     («Missing required fields»);
-//   - payload придумывал сам браузер, домен не проверялся.
+// КЛЮЧЕВЫЕ СВОЙСТВА:
+//   - публичный ключ определяется на сервере (walletStateInit / get_public_key),
+//     поле publicKey от клиента необязательно и только сверяется;
+//   - поддержка кошелька Telegram (WalletTg), у которого нет publicKey в TON Connect;
+//   - одноразовый payload от сервера и проверка домена.
 //
 // ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ (Settings → Edge Functions → Secrets):
-//   TON_AUTH_SALT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — как и раньше
+//   TON_AUTH_SALT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — обязательные
 //   TON_PROOF_DOMAINS  — необязательно; домены через запятую (по умолчанию tonix.app)
 //   TONCENTER_API_KEY  — необязательно; ключ toncenter, чтобы не упираться в лимит
 //
@@ -446,7 +445,7 @@ async function handler(req: Request): Promise<Response> {
             const upRes = await db.from("user_wallets").upsert({
                 user_id: userId,
                 wallet_address: rawAddress,
-                public_key: v.publicKeyHex,            // теперь проверенный ключ, а не присланный
+                public_key: v.publicKeyHex,            // ключ, проверенный сервером
                 verified_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
             if (upRes.error) console.error("[ton-wallet-auth] user_wallets upsert FAILED:", JSON.stringify(upRes.error));
