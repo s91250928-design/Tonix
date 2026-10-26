@@ -5,6 +5,7 @@
 ### DAO pages
 - Trust index removed from the DAO profile header; the overview now shows members, active vote and treasury.
 - Leaders section subtitle no longer mentions a trust index (all languages).
+- Member profile: trust rating and up/down voting removed.
 
 ## 2026-10-21
 

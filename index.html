@@ -261,7 +261,6 @@
     .tinfo{flex:1}.tinfo .n{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px}.tinfo .s{font-size:12px;color:var(--dim)}
     .chip{font-size:10px;padding:3px 9px;border-radius:6px;font-weight:700;text-transform:uppercase;border:1px solid var(--border2);color:var(--dim)}
     .chip.em{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}.chip.ma{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
-    .ttrust{text-align:right}.ttrust .t{font-weight:800;color:var(--accent);font-size:17px}.ttrust .l{font-size:10px;color:var(--dim)}
 
     .treas{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;margin-bottom:16px}
     .treas .l{font-size:13px;color:var(--dim);margin-bottom:6px}.treas .v{font-size:40px;font-weight:700;font-family:var(--serif)}.treas .usd{font-size:14px;color:var(--dim);margin-top:4px}
@@ -566,14 +565,6 @@
     .prof-av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-family:var(--serif);font-size:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex-shrink:0}
     .prof-head .pn{font-weight:700;font-size:18px}
     .prof-head .ps{font-size:13px;color:var(--dim);margin-top:2px}
-    .prof-trust{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;margin-bottom:16px}
-    .prof-trust .pt-v{font-family:var(--serif);font-weight:700;font-size:40px;line-height:1}
-    .prof-trust .pt-l{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
-    .prof-rate{display:flex;gap:10px;margin-top:14px}
-    .prof-rate button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
-    .prof-rate button.up:hover{border-color:var(--ok);color:var(--ok)}
-    .prof-rate button.down:hover{border-color:var(--bad);color:var(--bad)}
-    .prof-rate svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
     .prof-daos{margin-top:4px}
     .prof-daos .pd-l{font-size:12px;color:var(--dim2);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:10px}
     .prof-dao{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:14px}
@@ -2451,29 +2442,14 @@
     }
 
     /* ===== ПРОФИЛЬ УЧАСТНИКА: репутация + DAO ===== */
-    var _ratBase=0,_ratVote=0;
-    function openProfile(name,av,role,trust,activity,daos){
-        _ratBase=trust;_ratVote=0;
+    function openProfile(name,av,role,activity,daos){
         var daoList=(daos||'').split(',').filter(Boolean).map(function(d){return '<div class="prof-dao"><span class="pd-dot"></span>'+esc(d.trim())+'</div>';}).join('');
         showModal(
             '<span class="mclose" onclick="closeModal()">✕</span>'+
             '<div class="prof-head"><div class="prof-av">'+esc(av)+'</div><div><div class="pn">'+esc(name)+'</div><div class="ps">'+esc(role)+' · '+esc(activity)+'</div></div></div>'+
-            '<div class="prof-trust"><div class="pt-v" id="ratNum">'+trust+'</div><div class="pt-l">'+T('pf_trust')+'</div>'+
-                '<div class="prof-rate"><button class="up" id="ratUp" onclick="rate(1)"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'+T('pf_up')+'</button><button class="down" id="ratDown" onclick="rate(-1)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>'+T('pf_down')+'</button></div>'+
-            '</div>'+
             '<div class="prof-daos"><div class="pd-l">'+T('pf_inposts')+'</div>'+daoList+'</div>'+
-            '<button class="btn btn-ghost btn-lg" style="width:100%;margin-top:16px" onclick="openOnchain(\'\')">'+T('pf_onchain')+'</button>'+
-            '<p class="prof-note">'+T('pf_note')+'</p>'
+            '<button class="btn btn-ghost btn-lg" style="width:100%;margin-top:16px" onclick="openOnchain(\'\')">'+T('pf_onchain')+'</button>'
         );
-    }
-    function rate(dir){
-        _ratVote=(_ratVote===dir)?0:dir; // один голос, повтор — отмена
-        var el=document.getElementById('ratNum');if(el)el.textContent=_ratBase+_ratVote;
-        var up=document.getElementById('ratUp'),dn=document.getElementById('ratDown');
-        if(up)up.style.borderColor=(_ratVote===1)?'var(--ok)':'';
-        if(up)up.style.color=(_ratVote===1)?'var(--ok)':'';
-        if(dn)dn.style.borderColor=(_ratVote===-1)?'var(--bad)':'';
-        if(dn)dn.style.color=(_ratVote===-1)?'var(--bad)':'';
     }
     function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
     function openOnchain(addr){showModal('<span class="mclose" onclick="closeModal()">✕</span><h3>Ончейн-история</h3><div class="msub">Настоящие данные из блокчейна TON (источник: tonapi.io)</div><div class="field"><input id="ocAddr" placeholder="TON-адрес: EQ… или UQ…" value="'+esc(addr||'')+'"></div><button class="btn btn-main btn-lg" style="width:100%" onclick="loadOnchain()">Проверить в блокчейне</button><div id="ocResult" style="margin-top:18px"></div>');}
