@@ -243,6 +243,9 @@
     .prop{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:13px}
     .prop-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
     .prop-id{font-size:12px;color:var(--dim);font-weight:600}
+    .prop-author{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;min-width:0;max-width:70%}
+    .prop-author span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .prop-author:hover span{color:var(--accent)}
     .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:7px}.st .icon{width:13px;height:13px}
     .st-active{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
     .st-exec{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
@@ -5206,6 +5209,7 @@
            только опубликованное. Участник видит свои предложения на проверке
            (остальным база их не отдаёт). */
         var staff=false;try{staff=await isDaoStaff(dk);}catch(e){}
+        await tonixResolveAuthors(dk,list);
         var modOn=!st||st.proposal_moderation!==false;
         var isModSt=function(p){return p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed';};
         window._tonixModList=list;
@@ -5270,7 +5274,7 @@
             }
             /* Владелец и админы могут снять идущее голосование прямо с карточки (и в панели модерации) */
             if(staff&&p.status==='active')btns+='<div data-mod="'+tonixEsc(p.id)+'" style="margin-top:10px;text-align:right"><button class="mod-remove" onclick="tonixModerate(\''+p.id+'\',\'remove\')">'+(ru?'Снять с голосования':'Take down')+'</button></div>';
-            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
+            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top">'+tonixAuthorChip(p)+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
         });
         box.innerHTML=h;
         tonixVoteTimers();
@@ -5282,6 +5286,35 @@
         if(min%1440===0){var dd=min/1440;return dd+(ru?((dd%10===1&&dd%100!==11)?' день':((dd%10>=2&&dd%10<=4&&(dd%100<10||dd%100>=20))?' дня':' дней')):(dd===1?' day':' days'));}
         if(min%60===0)return (min/60)+(ru?' ч':' h');
         return min+(ru?' мин':' min');
+    }
+    /* ═══ Автор предложения: ник и аватар как в списке участников, клик — профиль ═══
+       Имена берём из публичного списка участников DAO (ник, аватар, кошелёк),
+       профиль — тем же окном, что открывается во вкладке «Участники». */
+    async function tonixResolveAuthors(dk,list){
+        var uids=[];list.forEach(function(p){if(p.authorUid&&uids.indexOf(p.authorUid)<0)uids.push(p.authorUid);});
+        if(!uids.length)return;
+        var wal={};
+        window._tonixProfiles=window._tonixProfiles||{};
+        try{
+            var rm=await sb.rpc('tonix_dao_members',{p_slug:dk});
+            if(rm&&!rm.error&&Array.isArray(rm.data))rm.data.forEach(function(x){
+                if(!x||!x.user_id)return;
+                if(x.wallet_address)wal[x.user_id]=x.wallet_address;
+                if(!window._tonixProfiles[x.user_id])window._tonixProfiles[x.user_id]={user_id:x.user_id,nickname:x.nickname||null,avatar_url:x.avatar_url||null};
+            });
+        }catch(e){}
+        try{await tonixGetProfiles(uids);}catch(e){}
+        list.forEach(function(p){
+            if(!p.authorUid)return;
+            var addr=wal[p.authorUid]?tonixFriendlyAddr(wal[p.authorUid]):'';
+            try{p.authorName=tonixDisplayName(p.authorUid,addr);}catch(e){}
+        });
+    }
+    function tonixAuthorChip(p){
+        var name=p.authorName||'';
+        if(!p.authorUid)return '<span class="prop-id">'+tonixEsc(name)+'</span>';
+        return '<button type="button" class="prop-author" onclick="event.stopPropagation();tonixOpenMember(\''+tonixEsc(p.authorUid)+'\')" title="'+((curLang==='ru')?'Открыть профиль':'Open profile')+'">'+
+            tonixAvatarHtml(p.authorUid,name,24)+'<span>'+tonixEsc(name)+'</span></button>';
     }
     /* ═══ Панель модерации (только владелец и админы) ═══
        «Ждут проверки» — одобрить или отклонить новые предложения участников.
@@ -5299,7 +5332,7 @@
         var meta=kind==='pending'?(dur?((ru?'Голосование после одобрения: ':'Voting after approval: ')+dur):'')
                 :kind==='live'?(ru?('Идёт · голосов: '+((p.yesPeople||0)+(p.noPeople||0))):('Live · votes: '+((p.yesPeople||0)+(p.noPeople||0))))
                 :((p.status==='removed'?(ru?'Снято':'Removed'):(ru?'Отклонено':'Rejected'))+(p.moderationNote?(' · '+tonixEsc(p.moderationNote)):''));
-        return '<div class="mod-card" data-mod="'+tonixEsc(p.id)+'"><div class="mc-top"><span>'+tonixEsc(p.authorName||'')+'</span><small>'+meta+'</small></div><h4>'+tonixEsc(p.title)+'</h4>'+
+        return '<div class="mod-card" data-mod="'+tonixEsc(p.id)+'"><div class="mc-top">'+tonixAuthorChip(p)+'<small>'+meta+'</small></div><h4>'+tonixEsc(p.title)+'</h4>'+
             (p.description?'<p>'+tonixEsc(p.description)+'</p>':'')+(act?'<div class="mc-act">'+act+'</div>':'')+b+'</div>';
     }
     async function tonixModPanel(refresh){
