@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-27
+
+### Proposal moderation
+- New DAO setting «Модерация голосований» (`dao_settings.proposal_moderation`, on by default).
+- Members' proposals are created as `pending`; the owner or an admin approves (voting starts at approval time, for the duration the author chose) or rejects with a reason.
+- Enforced by the database: pending proposals are hidden from everyone except the author and moderators (restrictive RLS), cannot be voted on (trigger on `dao_votes`), and cannot be published by a direct UPDATE (trigger). Approval only through `tonix_moderate_proposal`.
+- Migration: `sql/2026-10-27-proposal-moderation.sql` (run before deploying the site).
+
 ## 2026-10-26
 
 ### DAO pages

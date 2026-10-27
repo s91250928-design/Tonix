@@ -247,6 +247,12 @@
     .st-active{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
     .st-exec{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
     .st-rej{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+    .st-pend{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+    .prop.pending{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+    .mod-box{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border2);font-size:13px;color:var(--dim);line-height:1.45}
+    .mod-btns{display:flex;gap:8px;margin-top:10px}
+    .mod-btns .vbtn.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--border2));color:var(--ok)}
+    .mod-btns .vbtn.no{border-color:color-mix(in srgb,var(--bad) 45%,var(--border2));color:var(--bad)}
     .prop h3{font-size:17px;margin-bottom:6px}.prop .desc{font-size:13.5px;color:var(--dim);margin-bottom:15px}
     .barwrap{margin:14px 0 6px}.barrow{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px}
     .bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--bad) 20%,transparent);overflow:hidden}.bar>span{display:block;height:100%;background:var(--ok)}
@@ -1702,6 +1708,10 @@
         </select>
       </div>
       <button class="btn btn-main" style="width:100%;margin-top:12px" onclick="saveVoteSettings()" data-i18n="vt_save">Сохранить длительность</button>
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45;cursor:pointer">
+        <input id="gateModeration" type="checkbox" checked onchange="saveModerationSetting(this)" style="margin-top:3px;width:16px;height:16px;flex:none">
+        <span><b data-i18n="vt_mod">Модерация голосований</b><br><span style="color:var(--dim)" data-i18n="vt_mod_note">Предложения участников публикуются только после одобрения владельца или админа. Предложения владельца и админов — сразу.</span></span>
+      </label>
       <p style="font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5" data-i18n="vt_note">Столько идёт каждое новое голосование в этом DAO. Уже запущенные голосования не меняются. От 1 минуты до 30 дней.</p>
     </div>
     <div class="grp"><div class="glabel" data-i18n="tm_h">Казна</div>
@@ -1862,8 +1872,8 @@
     I18N.ar=Object.assign(I18N.ar||{},{"mm_more": "إجراءات", "mm_copy": "نسخ", "mm_translate": "ترجمة", "mm_delete": "حذف", "mt_same": "بلغتك بالفعل"});
     I18N.hi=Object.assign(I18N.hi||{},{"mm_more": "क्रियाएँ", "mm_copy": "कॉपी करें", "mm_translate": "अनुवाद करें", "mm_delete": "हटाएँ", "mt_same": "पहले से आपकी भाषा में"});
     I18N.ja=Object.assign(I18N.ja||{},{"mm_more": "操作", "mm_copy": "コピー", "mm_translate": "翻訳", "mm_delete": "削除", "mt_same": "すでにあなたの言語です"});
-    I18N.ru=Object.assign(I18N.ru||{},{"vt_h": "Голосования", "vt_dur": "Длительность голосования", "vt_min": "минут", "vt_hour": "часов", "vt_day": "дней", "vt_save": "Сохранить длительность", "vt_note": "Столько идёт каждое новое голосование в этом DAO. Уже запущенные голосования не меняются. От 1 минуты до 30 дней."});
-    I18N.en=Object.assign(I18N.en||{},{"vt_h": "Voting", "vt_dur": "Voting duration", "vt_min": "minutes", "vt_hour": "hours", "vt_day": "days", "vt_save": "Save duration", "vt_note": "How long each new vote runs in this DAO. Running votes are not affected. From 1 minute to 30 days."});
+    I18N.ru=Object.assign(I18N.ru||{},{"vt_mod": "Модерация голосований", "vt_mod_note": "Предложения участников публикуются только после одобрения владельца или админа. Предложения владельца и админов — сразу.", "vt_h": "Голосования", "vt_dur": "Длительность голосования", "vt_min": "минут", "vt_hour": "часов", "vt_day": "дней", "vt_save": "Сохранить длительность", "vt_note": "Столько идёт каждое новое голосование в этом DAO. Уже запущенные голосования не меняются. От 1 минуты до 30 дней."});
+    I18N.en=Object.assign(I18N.en||{},{"vt_mod": "Proposal moderation", "vt_mod_note": "Members' proposals go live only after the owner or an admin approves them. Proposals by the owner and admins go live immediately.", "vt_h": "Voting", "vt_dur": "Voting duration", "vt_min": "minutes", "vt_hour": "hours", "vt_day": "days", "vt_save": "Save duration", "vt_note": "How long each new vote runs in this DAO. Running votes are not affected. From 1 minute to 30 days."});
     I18N.ru=Object.assign(I18N.ru||{},{"g_sign_wallet": "Чтобы развернуть контракт, подключи кошелёк для подписи (это отдельно от входа). Анкета сохранена.\n\nСовет: если не хочешь деплой — вставь готовый адрес мультисига в поле «Адрес мультисига».", "g_connect_create": "Подключи TON-кошелёк, чтобы создать DAO. Анкета сохранена — вернёшься и продолжишь.", "g_signers_bad": "Адреса подписантов должны быть корректными TON-адресами (48 символов)", "g_add_signers": "Добавь адреса подписантов казны — система сама развернёт контракт", "g_ms_bad": "Адрес мультисига не похож на TON-адрес (48 символов, EQ…/UQ…)", "g_quiet": "Пока тихо — создай первое предложение или напиши в чат.", "g_deploy_cancel": "Деплой отменён — DAO не создано. Деньги не списаны.", "g_exec_setting": "» исполнено — настройка DAO изменена автоматически", "g_name_lt": "В названии нельзя использовать символы < и >", "g_owner_only": "Менять оформление может только владелец DAO.", "g_rules_saved": "Правила сохранены — их увидят все участники.", "g_auto_exec": " · решения исполняются автоматически", "g_no_props": "Пока нет предложений. Создай первое!", "g_thr_ph": "напр. снизить порог входа до 300 TON", "g_change_thr": "Изменить порог входа при победе", "g_name_taken": "Название занято — выбери другое", "g_name_len": "Название: от 2 до 40 символов", "g_sign_deploy": "Подпиши деплой в кошельке…", "g_on_pass": "При победе: порог входа → ", "g_deploy_mod": "Модуль деплоя не загружен", "g_ava_err": "Ошибка загрузки аватара: ", "g_created_prop": " создал(а) предложение «", "g_connect_first": "Сначала подключи кошелёк", "g_thr_num": "Укажи новый порог числом", "g_ava_fail": "Аватар не загрузился: ", "g_no_db": "Нет соединения с базой", "g_bg_err": "Ошибка загрузки фона: ", "g_new_prop_btn": "+ Создать предложение", "g_loading_props": "Загрузка голосований…", "g_enter_name": "Введите название DAO", "g_img4": "Картинка больше 4 МБ", "g_img6": "Картинка больше 6 МБ", "g_cur_thr": "Порог входа сейчас: ", "g_join_first": "Сначала вступи в DAO", "g_save_err": "Ошибка сохранения: ", "g_bg_fail": "Фон не загрузился: ", "g_prop_details": "детали предложения…", "g_checking": "Проверяю название…", "g_new_prop": "Новое предложение", "g_new_thr": "Новый порог (TON)", "g_addr_copied": "Адрес скопирован", "g_not_saved": "Не сохранилось: ", "g_enter_title": "Введи заголовок", "g_no_dao": "DAO не выбрано", "g_prop_q": "Предложение «", "g_publish": "Опубликовать", "g_your_vote": "Твой голос: ", "g_rejected_q": "» отклонено", "g_votes_h": "Голосования", "g_create_dao": "Создать DAO", "g_creating": "Создаю DAO…", "g_owner": "· владелец", "g_justnow": "только что", "g_title": "Заголовок", "g_executed": "Исполнено", "g_rejected": "Отклонено", "g_no_dot": "Против · ", "g_desc": "Описание", "g_member": "Участник", "g_active_dot": "Идёт · ", "g_passed": "Принято", "g_today": "Сегодня", "g_no": "Против", "g_yesterday_l": "вчера ", "g_yesterday": "Вчера", "g_yes_dot": "За · ", "g_yes": "За", "g_you_short": "Ты"});
     I18N.en=Object.assign(I18N.en||{},{"g_sign_wallet": "To deploy the contract, connect a wallet for signing (separate from login). Your form is saved.", "g_connect_create": "Connect your TON wallet to create the DAO. Your form is saved — come back and continue.", "g_signers_bad": "Signer addresses must be valid TON addresses (48 chars)", "g_add_signers": "Add treasury signer addresses — the contract will be deployed automatically", "g_ms_bad": "Multisig address is not a valid TON address (48 chars, EQ…/UQ…)", "g_quiet": "Quiet so far — create the first proposal or say hi in chat.", "g_deploy_cancel": "Deploy cancelled — DAO not created.", "g_exec_setting": "» executed — DAO setting changed automatically", "g_name_lt": "Name cannot contain < or >", "g_owner_only": "Only the DAO owner can change appearance.", "g_rules_saved": "Rules saved — all members will see them.", "g_auto_exec": " · decisions execute automatically", "g_no_props": "No proposals yet. Create the first one!", "g_thr_ph": "e.g. lower the entry threshold to 300 TON", "g_change_thr": "Change entry threshold on pass", "g_name_taken": "This name is taken — pick another", "g_name_len": "Name must be 2–40 characters", "g_sign_deploy": "Sign the deploy in your wallet…", "g_on_pass": "On pass: entry threshold → ", "g_deploy_mod": "Deploy module not loaded", "g_ava_err": "Avatar error: ", "g_created_prop": " created proposal «", "g_connect_first": "Connect your wallet first", "g_thr_num": "Enter the new threshold", "g_ava_fail": "Avatar upload failed: ", "g_no_db": "No database connection", "g_bg_err": "Background error: ", "g_new_prop_btn": "+ New proposal", "g_loading_props": "Loading proposals…", "g_enter_name": "Enter a DAO name", "g_img4": "Image is larger than 4 MB", "g_img6": "Image is larger than 6 MB", "g_cur_thr": "Current entry threshold: ", "g_join_first": "Join the DAO first", "g_save_err": "Save error: ", "g_bg_fail": "Background upload failed: ", "g_prop_details": "details…", "g_checking": "Checking name…", "g_new_prop": "New proposal", "g_new_thr": "New threshold (TON)", "g_addr_copied": "Address copied", "g_not_saved": "Not saved: ", "g_enter_title": "Enter a title", "g_no_dao": "No DAO selected", "g_prop_q": "Proposal «", "g_publish": "Publish", "g_your_vote": "Your vote: ", "g_rejected_q": "» rejected", "g_votes_h": "Proposals", "g_create_dao": "Create DAO", "g_creating": "Creating DAO…", "g_owner": "· owner", "g_justnow": "just now", "g_title": "Title", "g_executed": "Executed", "g_rejected": "Rejected", "g_no_dot": "No · ", "g_desc": "Description", "g_member": "Member", "g_active_dot": "Active · ", "g_passed": "Passed", "g_today": "Today", "g_no": "No", "g_yesterday_l": "yesterday ", "g_yesterday": "Yesterday", "g_yes_dot": "Yes · ", "g_yes": "Yes", "g_you_short": "You"});
     I18N.es=Object.assign(I18N.es||{},{"g_sign_wallet": "Para desplegar el contrato, conecta una billetera para firmar (aparte del inicio de sesión). El formulario está guardado.", "g_connect_create": "Conecta tu billetera TON para crear la DAO. El formulario está guardado: vuelve y continúa.", "g_signers_bad": "Las direcciones de los firmantes deben ser válidas (48 caracteres)", "g_add_signers": "Añade las direcciones de los firmantes: el contrato se desplegará solo", "g_ms_bad": "La dirección del multisig no es válida (48 caracteres, EQ…/UQ…)", "g_quiet": "Todo tranquilo: crea la primera propuesta o saluda en el chat.", "g_deploy_cancel": "Despliegue cancelado — la DAO no se creó. No se cobró nada.", "g_exec_setting": "» ejecutada — el ajuste de la DAO cambió automáticamente", "g_name_lt": "El nombre no puede contener < ni >", "g_owner_only": "Solo el propietario de la DAO puede cambiar la apariencia.", "g_rules_saved": "Reglas guardadas: las verán todos los miembros.", "g_auto_exec": " · las decisiones se ejecutan automáticamente", "g_no_props": "Aún no hay propuestas. ¡Crea la primera!", "g_thr_ph": "p. ej. bajar el umbral de entrada a 300 TON", "g_change_thr": "Cambiar el umbral de entrada si se aprueba", "g_name_taken": "Ese nombre ya existe: elige otro", "g_name_len": "El nombre debe tener entre 2 y 40 caracteres", "g_sign_deploy": "Firma el despliegue en tu billetera…", "g_on_pass": "Si se aprueba: umbral de entrada → ", "g_deploy_mod": "El módulo de despliegue no está cargado", "g_ava_err": "Error con el avatar: ", "g_created_prop": " creó la propuesta «", "g_connect_first": "Primero conecta tu billetera", "g_thr_num": "Indica el nuevo umbral con un número", "g_ava_fail": "No se subió el avatar: ", "g_no_db": "Sin conexión con la base de datos", "g_bg_err": "Error con el fondo: ", "g_new_prop_btn": "+ Nueva propuesta", "g_loading_props": "Cargando propuestas…", "g_enter_name": "Escribe el nombre de la DAO", "g_img4": "La imagen supera 4 MB", "g_img6": "La imagen supera 6 MB", "g_cur_thr": "Umbral de entrada actual: ", "g_join_first": "Primero únete a la DAO", "g_save_err": "Error al guardar: ", "g_bg_fail": "No se subió el fondo: ", "g_prop_details": "detalles…", "g_checking": "Comprobando el nombre…", "g_new_prop": "Nueva propuesta", "g_new_thr": "Nuevo umbral (TON)", "g_addr_copied": "Dirección copiada", "g_not_saved": "No se guardó: ", "g_enter_title": "Escribe un título", "g_no_dao": "Ninguna DAO seleccionada", "g_prop_q": "Propuesta «", "g_publish": "Publicar", "g_your_vote": "Tu voto: ", "g_rejected_q": "» rechazada", "g_votes_h": "Propuestas", "g_create_dao": "Crear DAO", "g_creating": "Creando la DAO…", "g_owner": "· propietario", "g_justnow": "ahora mismo", "g_title": "Título", "g_executed": "Ejecutada", "g_rejected": "Rechazada", "g_no_dot": "No · ", "g_desc": "Descripción", "g_member": "Miembro", "g_active_dot": "En curso · ", "g_passed": "Aprobada", "g_today": "Hoy", "g_no": "No", "g_yesterday_l": "ayer ", "g_yesterday": "Ayer", "g_yes_dot": "Sí · ", "g_yes": "Sí", "g_you_short": "Tú"});
@@ -3647,6 +3657,15 @@
        Храним в dao_settings.vote_hours (в часах, дробные допустимы).
        После записи перечитываем значение: если столбец в базе целочисленный,
        минуты округлятся в ноль, и человек должен это увидеть, а не гадать. */
+    async function saveModerationSetting(el){
+        var ru=(typeof curLang==='undefined'||curLang==='ru');
+        var on=!!el.checked;
+        var ok=await tonixSaveDaoSettings({proposal_moderation:on}, true);
+        if(!ok){ el.checked=!on; alert(ru?'Не сохранилось. Включать и выключать модерацию может владелец DAO.':'Not saved. Only the DAO owner can change moderation.'); return; }
+        tonixNotice(on?(ru?'Модерация включена':'Moderation on'):(ru?'Модерация выключена':'Moderation off'),
+            on?(ru?'Новые предложения участников сначала попадут к вам на проверку.':'New member proposals will come to you for review first.')
+              :(ru?'Предложения участников снова публикуются сразу.':'Member proposals are published immediately again.'),'ok');
+    }
     async function saveVoteSettings(){
         var ru=(typeof curLang==='undefined'||curLang==='ru');
         var n=parseInt(((document.getElementById('gateVoteN')||{}).value||''),10);
@@ -3804,6 +3823,9 @@
             var r=await sb.from('dao_settings')
                 .select('entry_type,entry_fee_ton,entry_threshold_ton,proposal_threshold_ton,gate_jetton,gate_min,vote_hours,fee_jetton,fee_symbol,fee_decimals,vote_jetton,vote_symbol,vote_decimals,treasury_main_jetton')
                 .eq('dao_key',key).limit(1);
+            /* модерация — отдельным запросом: если миграция ещё не запущена, остальные настройки всё равно загрузятся */
+            try{ var mr=await sb.from('dao_settings').select('proposal_moderation').eq('dao_key',key).limit(1);
+                 var mc=document.getElementById('gateModeration'); if(mc&&!mr.error) mc.checked=!(mr.data&&mr.data[0]&&mr.data[0].proposal_moderation===false); }catch(e){}
             if(r.error||!r.data||!r.data[0]) return;
             var s=r.data[0], set=function(id,v){var el=document.getElementById(id); if(el)el.value=(v==null?'':v);};
             /* Длительность показываем в самой понятной единице:
@@ -5008,6 +5030,7 @@
             var tmap={};props.forEach(function(p){tmap[p.id]=p.title;});
             var ev=[];
             props.forEach(function(p){
+                if(p.status==='pending'||p.status==='moderation_rejected')return;
                 ev.push({t:p.created_at,txt:nm(p.author_uid)+(T('g_created_prop'))+tonixEsc(p.title)+'»'});
                 if(p.status==='executed'&&p.executed_at)ev.push({t:p.executed_at,txt:(T('g_prop_q'))+tonixEsc(p.title)+(T('g_exec_setting'))});
                 if(p.status==='rejected')ev.push({t:p.ends_at,txt:(T('g_prop_q'))+tonixEsc(p.title)+(T('g_rejected_q'))});
@@ -5038,7 +5061,7 @@
             box.innerHTML='<p>'+tonixEsc(T('g_props_empty'))+'</p>';
             return;
         }
-        list=list.slice(0,3);
+        list=list.filter(function(p){return p.status!=='pending'&&p.status!=='moderation_rejected';}).slice(0,3);
         box.className='';
         box.style.textAlign='left';
         var h='';
@@ -5163,8 +5186,18 @@
         var st=null,list=[];
         try{st=await getDaoSettings(dk);}catch(e){}
         try{list=await listProposals(dk);}catch(e){}
+        /* Модерация: предложения на проверке — наверху. Их видят только автор,
+           владелец и админы (это ограничивает сама база). */
+        var staff=false;try{staff=await isDaoStaff(dk);}catch(e){}
+        var modOn=!st||st.proposal_moderation!==false;
+        var pendN=list.filter(function(p){return p.status==='pending';}).length;
+        list.sort(function(a,b){return (b.status==='pending')-(a.status==='pending');});
         var h='<div class="sec-h"><h2>'+(T('g_votes_h'))+'</h2><span class="link" onclick="tonixNewProposal()">'+(T('g_new_prop_btn'))+'</span></div>';
         h+='<div id="delegBox" class="ginfo" style="margin-bottom:16px">'+await tonixDelegHtml(dk)+'</div>';
+        if(modOn)h+='<div class="mod-box" style="margin:0 0 14px">'+(staff
+            ?(ru?('🛡 Модерация включена: предложения участников публикуются только после одобрения владельца или админа.'+(pendN?(' <b style="color:var(--accent)">Ждут проверки: '+pendN+'</b>'):''))
+                :('🛡 Moderation is on: members\' proposals go live only after an owner or admin approves them.'+(pendN?(' <b style="color:var(--accent)">Awaiting review: '+pendN+'</b>'):'')))
+            :(ru?'🛡 Новые предложения публикуются после проверки владельцем или админом DAO.':'🛡 New proposals go live after the DAO owner or an admin reviews them.'))+'</div>';
         if(st)h+='<div style="font-size:13px;color:var(--dim);margin:-6px 0 14px">'+(T('g_cur_thr'))+'<b style="color:var(--text)">'+tonixEsc(st.entry_threshold_ton)+' TON</b>'+(T('g_auto_exec'))+'</div>';
         if(!list.length)h+='<div style="color:var(--dim);font-size:14px;padding:18px 0">'+(T('g_no_props'))+'</div>';
         list.forEach(function(p){
@@ -5173,6 +5206,8 @@
             if(p.status==='executed')stb='<span class="st st-exec">'+(T('g_executed'))+'</span>';
             else if(p.status==='passed')stb='<span class="st st-exec">'+(T('g_passed'))+'</span>';
             else if(p.status==='rejected')stb='<span class="st st-rej">'+(T('g_rejected'))+'</span>';
+            else if(p.status==='pending')stb='<span class="st st-pend">'+(ru?'На модерации':'Under review')+'</span>';
+            else if(p.status==='moderation_rejected')stb='<span class="st st-rej">'+(ru?'Не прошло модерацию':'Rejected by moderator')+'</span>';
             else stb='<span class="st st-active" data-ends="'+tonixEsc(p.endsAt)+'">'+(T('g_active_dot'))+proposalTimeLeft(p.endsAt,curLang)+'</span>';
             var action='';
             if(p.actionType==='set_entry_threshold'&&p.actionValue!=null)action='<div style="font-size:12.5px;color:var(--accent);margin-top:5px">'+(T('g_on_pass'))+tonixEsc(p.actionValue)+' TON</div>';
@@ -5204,11 +5239,22 @@
                   '<div style="font-size:12px;color:'+psCol+';margin-top:5px">'+tonixEsc(psMap[p.payoutStatus]||p.payoutStatus)+'</div>'+noteHtml+'</div>';
             }
             var btns='';
+            if(p.status==='pending'){
+                var dur=p.voteMinutes?tonixDurText(p.voteMinutes,ru):'';
+                btns=staff
+                    ? '<div class="mod-box">'+(ru?('Проверьте предложение. После одобрения оно увидят все участники и сразу начнётся голосование'+(dur?(' на '+dur):'')+'.')
+                                                 :('Review this proposal. Once approved, all members will see it and voting starts'+(dur?(' for '+dur):'')+'.'))+
+                      '<div class="mod-btns"><button class="vbtn ok" onclick="tonixModerate(\''+p.id+'\',true)">'+(ru?'Одобрить и опубликовать':'Approve & publish')+'</button>'+
+                      '<button class="vbtn no" onclick="tonixModerate(\''+p.id+'\',false)">'+(ru?'Отклонить':'Reject')+'</button></div></div>'
+                    : '<div class="mod-box">'+(ru?'Предложение ждёт проверки владельцем или админом. Пока его видите только вы и модераторы.':'Waiting for the owner or an admin to review. Only you and moderators can see it for now.')+'</div>';
+            }else if(p.status==='moderation_rejected'){
+                btns='<div class="mod-box">'+(ru?'Модератор отклонил предложение':'A moderator rejected this proposal')+(p.moderationNote?(': '+tonixEsc(p.moderationNote)):'.')+'</div>';
+            }
             if(p.status==='active'&&!p.expired){
                 if(p.myChoice)btns='<div style="font-size:13px;color:var(--dim);margin-top:10px">'+(T('g_your_vote'))+(p.myChoice==='yes'?(T('g_yes')):(T('g_no')))+'</div>';
                 else btns='<div class="vbtns"><button class="vbtn y" onclick="tonixVoteClick(\''+p.id+'\',\'yes\')">'+(T('g_yes'))+'</button><button class="vbtn n" onclick="tonixVoteClick(\''+p.id+'\',\'no\')">'+(T('g_no'))+'</button></div>';
             }
-            h+='<div class="prop" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>'+btns+'</div>';
+            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
         });
         box.innerHTML=h;
         tonixVoteTimers();
@@ -5216,6 +5262,35 @@
     /* Живой отсчёт: раз в секунду обновляем текст в бейджах активных
        голосований. Когда время вышло — один раз перерисовываем вкладку,
        чтобы сервер закрыл голосование и посчитал итог. */
+    function tonixDurText(min,ru){
+        if(min%1440===0){var dd=min/1440;return dd+(ru?((dd%10===1&&dd%100!==11)?' день':((dd%10>=2&&dd%10<=4&&(dd%100<10||dd%100>=20))?' дня':' дней')):(dd===1?' day':' days'));}
+        if(min%60===0)return (min/60)+(ru?' ч':' h');
+        return min+(ru?' мин':' min');
+    }
+    /* Одобрить / отклонить предложение (владелец и админы DAO) */
+    var _tonixModBusy=false;
+    async function tonixModerate(id,approve){
+        if(_tonixModBusy)return;
+        var ru=(curLang==='ru');
+        var note=null;
+        if(!approve){
+            note=prompt(ru?'Причина отказа (её увидит автор). Можно оставить пустым.':'Reason (the author will see it). Optional.','');
+            if(note===null)return;
+        }
+        _tonixModBusy=true;
+        var card=document.querySelector('[data-prop="'+id+'"]');
+        if(card)card.querySelectorAll('button').forEach(function(b){b.disabled=true;b.style.opacity=.5;});
+        try{
+            var r=await moderateProposal(id,approve,note);
+            if(!r.ok){ tonixNotice(ru?'Не получилось':'Failed', r.error||'', 'warn'); return; }
+            tonixNotice(approve?(ru?'Опубликовано':'Published'):(ru?'Отклонено':'Rejected'),
+                approve?(ru?'Голосование началось — участники его уже видят.':'Voting has started — members can see it now.')
+                       :(ru?'Автор увидит, что предложение не прошло модерацию.':'The author will see it was rejected.'),'ok');
+        }finally{
+            _tonixModBusy=false;
+            tonixVoteTabOpened();
+        }
+    }
     var _tonixVoteTick=null;
     function tonixVoteTimers(){
         if(_tonixVoteTick){clearInterval(_tonixVoteTick);_tonixVoteTick=null;}
@@ -5403,7 +5478,14 @@
         closeModal();tonixVoteTabOpened();
         /* Сцена вместо молчаливого закрытия окна: понятно, что
            предложение ушло в работу, и видно, чем оно закончится. */
-        if(typeof tonixScene==='function'){
+        if(r.pending&&typeof tonixScene==='function'){
+            tonixScene('join',{
+                title: ru?'Отправлено на модерацию':'Sent for review',
+                text: ru?'Владелец или админ DAO проверит предложение. После одобрения его увидят все участники и начнётся голосование — на ту длительность, что указана в настройках DAO.'
+                        :'The DAO owner or an admin will review it. Once approved, all members will see it and voting will start.',
+                buttons:[{label:(ru?'Хорошо':'Got it'),cls:'btn-main'}]
+            });
+        }else if(typeof tonixScene==='function'){
             var isPay=(kind==='payout');
             tonixScene('join',{
                 title: ru?'Предложение опубликовано':'Proposal published',

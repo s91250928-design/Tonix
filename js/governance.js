@@ -73,6 +73,9 @@ async function listProposals(daoKey) {
             actionType: p.action_type, actionValue: p.action_value,
             actionTarget: p.action_target || null,
             status: p.status, endsAt: p.ends_at, createdAt: p.created_at,
+            voteMinutes: (p.vote_minutes != null) ? Number(p.vote_minutes) : null,
+            moderationNote: p.moderation_note || null,
+            moderatedAt: p.moderated_at || null,
             payoutAddress: p.payout_address || null,
             payoutAmount: (p.payout_amount != null) ? Number(p.payout_amount) : null,
             payoutStatus: p.payout_status || 'none',
@@ -144,7 +147,10 @@ async function govCreateProposal(daoKey, title, description, action, durationMin
         description: (description || '').trim(),
         action_type: (action && action.type) || 'none',
         action_value: (action && action.value != null) ? action.value : null,
-        ends_at: endsAt
+        ends_at: endsAt,
+        // длительность запоминаем: если предложение уйдёт на модерацию,
+        // голосование начнётся с момента одобрения и продлится столько же
+        vote_minutes: Math.round(minutes)
     };
 
     /* Предложение о выплате из казны.
@@ -184,9 +190,49 @@ async function govCreateProposal(daoKey, title, description, action, durationMin
         row.action_target = target;
         row.action_value = null;
     }
-    const { data, error } = await sb.from('dao_proposals').insert(row).select().maybeSingle();
+    let { data, error } = await sb.from('dao_proposals').insert(row).select().maybeSingle();
+    if (error && /vote_minutes/.test(error.message || '')) {
+        // база ещё без модерации (миграция не запущена) — создаём как раньше
+        delete row.vote_minutes;
+        ({ data, error } = await sb.from('dao_proposals').insert(row).select().maybeSingle());
+    }
     if (error) { console.error('[Gov] create:', error.message); return { ok: false, error: error.message }; }
-    return { ok: true, proposal: data };
+    return { ok: true, proposal: data, pending: !!(data && data.status === 'pending') };
+}
+
+// --- Модерация: одобрить или отклонить предложение (владелец и админы) ---
+// Проверку прав и смену статуса делает база (tonix_moderate_proposal):
+// подменить её из браузера нельзя. При одобрении голосование стартует сейчас.
+async function moderateProposal(proposalId, approve, note) {
+    if (!currentUID) return { ok: false, error: 'Сначала войди кошельком' };
+    const { data, error } = await sb.rpc('tonix_moderate_proposal', {
+        p_id: proposalId, p_approve: !!approve, p_note: note || null
+    });
+    if (error) { console.error('[Gov] moderate:', error.message); return { ok: false, error: error.message }; }
+    if (!data || !data.ok) {
+        const map = {
+            'not-staff': 'Одобрять предложения могут только владелец и админы DAO',
+            'not-pending': 'Предложение уже рассмотрено',
+            'no-proposal': 'Предложение не найдено',
+            'no-session': 'Войди заново'
+        };
+        const e = (data && data.error) || 'failed';
+        return { ok: false, error: map[e] || e };
+    }
+    return { ok: true, status: data.status, endsAt: data.ends_at };
+}
+
+// Я владелец или админ этого DAO? (для кнопок модерации; права всё равно проверит база)
+async function isDaoStaff(daoKey) {
+    if (!currentUID) return false;
+    try {
+        const { data, error } = await sb.rpc('tonix_is_dao_staff', { p_dao: daoKey, p_uid: currentUID });
+        if (!error) return !!data;
+    } catch (e) { }
+    try {
+        const r = await sb.rpc('tonix_dao_role', { p_dao: daoKey, p_uid: currentUID });
+        return !!(r && r.data && (r.data === 'owner' || r.data === 'admin'));
+    } catch (e) { return false; }
 }
 
 // --- Проголосовать (за/против). Повторно — не даст база. ---
