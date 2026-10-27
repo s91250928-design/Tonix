@@ -95,7 +95,7 @@ r as (
                       and (coalesce(qual, '') = 'true' or coalesce(with_check, '') = 'true')), 'ОК')
   union all
   -- 21. правка своей строки без CHECK
-  select 21, 'UPDATE без CHECK (можно сменить владельца строки)',
+  select 21, 'Правка своей строки без ограничения полей (старые таблицы мессенджера)',
          coalesce((select 'СМОТРЕТЬ: ' || string_agg(t || '.' || n, ', ')
                      from pol where cmd in ('UPDATE','ALL') and with_check is null
                       and not ('service_role' = any(roles))), 'ОК')
@@ -109,6 +109,14 @@ r as (
   select 23, 'daos_protect_core: какие поля защищены',
          coalesce((select 'СМОТРЕТЬ: ' || left(regexp_replace(prosrc, '\s+', ' ', 'g'), 900)
                      from pg_proc where proname = 'daos_protect_core' limit 1), 'ДЫРА: функции нет')
+  union all
+  select 25, 'Галочку «проверено» ставит только SQL-запрос',
+         case when exists (select 1 from trg where tgname = 'tonix_verified_guard') then 'ОК' else 'ДЫРА: не запущен hardening-4.sql' end
+  union all
+  select 26, 'Файлы чатов: посторонний не загрузит и не перезапишет',
+         case when exists (select 1 from pg_policies where schemaname = 'storage'
+                            and policyname in ('storage_auth_upload','storage_auth_update'))
+              then 'ДЫРА: не запущен hardening-4.sql' else 'ОК' end
   union all
   -- 24. хранилище файлов
   select 24, 'Хранилище: правила записи',
