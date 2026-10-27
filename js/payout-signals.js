@@ -184,7 +184,7 @@
             return '<div style="margin-top:7px">' +
                 '<div style="font-size:11px;color:var(--dim)">' + esc(label) + '</div>' +
                 '<div style="font-family:monospace;font-size:12.5px;color:var(--text);word-break:break-all">' + esc(value) + '</div>' +
-                (copy ? '<a href="javascript:void(0)" onclick="tonixCopyPayoutAddr(this,\'' + esc(value) + '\')" style="color:var(--accent);text-decoration:none;font-size:11.5px">' + esc(t("copy")) + '</a>' : '') +
+                (copy ? '<a href="javascript:void(0)" data-copy="' + esc(value) + '" onclick="tonixCopyPayoutAddr(this,this.getAttribute(\'data-copy\'))" style="color:var(--accent);text-decoration:none;font-size:11.5px">' + esc(t("copy")) + '</a>' : '') +
                 '</div>';
         }
         var howTo = '<div style="margin-top:10px;padding:10px 12px;border-radius:9px;' +
@@ -224,7 +224,7 @@
             '<div style="font-family:monospace;font-size:12px;color:var(--text);word-break:break-all">' + esc(p.payout_address) + '</div>' +
             howTo +
             '<div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">' +
-              '<a href="javascript:void(0)" onclick="tonixCopyPayoutAddr(this,\'' + esc(p.payout_address) + '\')" style="color:var(--accent);text-decoration:none;font-size:12.5px">' + esc(t("copy")) + '</a>' +
+              '<a href="javascript:void(0)" data-copy="' + esc(p.payout_address) + '" onclick="tonixCopyPayoutAddr(this,this.getAttribute(\'data-copy\'))" style="color:var(--accent);text-decoration:none;font-size:12.5px">' + esc(t("copy")) + '</a>' +
               '<a href="' + esc(link) + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:12.5px">' + esc(t("open")) + '</a>' +
             '</div>' + btns +
         '</div>';

@@ -92,35 +92,63 @@ Deno.serve(async (req) => {
         const wByUid: Record<string, string> = {};
         for (const w of (ws ?? [])) wByUid[w.user_id] = w.wallet_address;
 
+        /* Баланс токена сейчас. Раньше при сбое сети брался «вес на момент
+           голоса», а при ответе-ошибке (например, 429 «слишком много запросов»)
+           баланс молча считался нулём. Первое позволяло засчитать токены,
+           которые уже переслали другому голосующему, второе — обнулить честные
+           голоса. Теперь: несколько попыток, а если баланс так и не получен —
+           голосование НЕ закрываем в этот раз, оно закроется при следующем вызове. */
+        const tonapiKey = Deno.env.get("TONAPI_KEY") || "";
+        async function jettonBalance(addr: string): Promise<number | null> {
+          for (let attempt = 0; attempt < 4; attempt++) {
+            try {
+              const r = await fetch(
+                `${apiBase}/v2/accounts/${encodeURIComponent(addr)}/jettons`,
+                { headers: { "Accept": "application/json", ...(tonapiKey ? { "Authorization": `Bearer ${tonapiKey}` } : {}) } },
+              );
+              if (r.status === 404) return 0; // кошелёк ещё не активирован — токенов нет
+              if (r.ok) {
+                const j = await r.json();
+                for (const b of (j?.balances || [])) {
+                  if (String(b?.jetton?.address || "").toLowerCase() === want) {
+                    return Number(b.balance) / Math.pow(10, dec);
+                  }
+                }
+                return 0;
+              }
+            } catch { /* сеть — пробуем ещё раз */ }
+            await new Promise((res) => setTimeout(res, 1200 * (attempt + 1)));
+          }
+          return null;
+        }
+
+        let unreliable = false;
+        const finals: { uid: string; used: number }[] = [];
         for (const v of (votes ?? [])) {
           const was = Number(v.weight);
           let nowBal = 0;
           const addr = wByUid[v.voter_uid];
           if (addr) {
-            try {
-              const r = await fetch(
-                `${apiBase}/v2/accounts/${encodeURIComponent(addr)}/jettons`,
-                { headers: { "Accept": "application/json" } },
-              );
-              const j = await r.json();
-              for (const b of (j?.balances || [])) {
-                if (String(b?.jetton?.address || "").toLowerCase() === want) {
-                  nowBal = Number(b.balance) / Math.pow(10, dec);
-                  break;
-                }
-              }
-            } catch { /* сеть подвела — вес этого голоса считаем как записан */
-              nowBal = was;
-            }
+            const b = await jettonBalance(addr);
+            if (b === null) { unreliable = true; break; }
+            nowBal = b;
           }
           const used = Math.min(
             Number.isFinite(was) ? was : 0,
             Number.isFinite(nowBal) ? nowBal : 0,
           );
           if (v.choice === "yes") yes += used; else no += used;
-          /* Пишем пересчитанный вес — для прозрачности в интерфейсе */
-          await sb.from("dao_votes").update({ weight_final: used })
-            .eq("proposal_id", p.id).eq("voter_uid", v.voter_uid);
+          finals.push({ uid: v.voter_uid, used });
+        }
+        if (unreliable) {
+          console.warn("[finish-proposal] баланс не получен, закрытие отложено:", p.id);
+          results.push({ id: p.id, title: p.title, status: "active", deferred: true });
+          continue;
+        }
+        /* Пишем пересчитанный вес — для прозрачности в интерфейсе */
+        for (const f of finals) {
+          await sb.from("dao_votes").update({ weight_final: f.used })
+            .eq("proposal_id", p.id).eq("voter_uid", f.uid);
         }
         yes = Math.round(yes * 1e6) / 1e6;
         no = Math.round(no * 1e6) / 1e6;
@@ -236,7 +264,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ processed: results.length, results }),
+      JSON.stringify({ processed: results.filter((r: any) => !r.deferred).length, results }),
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (e) {

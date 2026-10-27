@@ -964,7 +964,7 @@
 <script src="js/treasury-coin.js?v=20261018-4"></script>
 <script src="js/treasury-guide.js?v=20260721-4"></script>
 <script src="js/landing-tech.js?v=20260722-5"></script>
-<script src="js/payout-signals.js?v=20260721-11"></script>
+<script src="js/payout-signals.js?v=20261027-1"></script>
 <script src="js/treasury-tx.js?v=20261018-1"></script>
 <script src="js/daos-loader.js?v=20261021-1"></script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
@@ -3469,9 +3469,9 @@
                 +'<div style="font-size:11px;color:var(--dim2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'+(ru?'Кошелёк':'Wallet')+'</div>'
                 +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
                 +'<code style="font-size:12.5px;color:var(--text);word-break:break-all;flex:1;min-width:180px">'+tonixEsc(addr)+'</code>'
-                +'<button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="tonixCopy(\''+tonixEsc(addr)+'\')">'+(ru?'Копировать':'Copy')+'</button>'
+                +'<button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" data-addr="'+tonixEsc(addr)+'" onclick="tonixCopy(this.getAttribute(\'data-addr\'))">'+(ru?'Копировать':'Copy')+'</button>'
                 +'</div>'
-                +'<span class="link" style="font-size:12px;color:var(--accent);cursor:pointer;display:inline-block;margin-top:8px" onclick="openOnchain(\''+tonixEsc(addr)+'\')">'+T('mem_onchain')+' →</span>'
+                +'<span class="link" style="font-size:12px;color:var(--accent);cursor:pointer;display:inline-block;margin-top:8px" data-addr="'+tonixEsc(addr)+'" onclick="openOnchain(this.getAttribute(\'data-addr\'))">'+T('mem_onchain')+' →</span>'
                 +'</div>';
         }
         if(tg){
@@ -5313,7 +5313,7 @@
     function tonixAuthorChip(p){
         var name=p.authorName||'';
         if(!p.authorUid)return '<span class="prop-id">'+tonixEsc(name)+'</span>';
-        return '<button type="button" class="prop-author" onclick="event.stopPropagation();tonixOpenMember(\''+tonixEsc(p.authorUid)+'\')" title="'+((curLang==='ru')?'Открыть профиль':'Open profile')+'">'+
+        return '<button type="button" class="prop-author" data-uid="'+tonixEsc(p.authorUid)+'" onclick="event.stopPropagation();tonixOpenMember(this.getAttribute(\'data-uid\'))" title="'+((curLang==='ru')?'Открыть профиль':'Open profile')+'">'+
             tonixAvatarHtml(p.authorUid,name,24)+'<span>'+tonixEsc(name)+'</span></button>';
     }
     /* ═══ Панель модерации (только владелец и админы) ═══

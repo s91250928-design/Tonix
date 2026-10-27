@@ -8,6 +8,9 @@
 - Enforced by the database: pending proposals are hidden from everyone except the author and moderators (restrictive RLS), cannot be voted on (trigger on `dao_votes`), and cannot be published by a direct UPDATE (trigger). Approval only through `tonix_moderate_proposal`.
 - Migration: `sql/2026-10-27-proposal-moderation.sql` (run before deploying the site).
 - Moderation panel for the owner and admins: approve/reject new proposals and take down live votes (`removed` status, `tonix_moderate`). Migration: `sql/2026-10-27-moderation-panel.sql`.
+- Security hardening (`sql/2026-10-27-hardening.sql`): author is always the signed-in user; title, description, payout and action fields are immutable after creation; server-only fields reset on insert; vote duration 1 min – 30 days; length and TON-address format checks.
+- XSS: user-provided addresses are no longer placed inside inline JavaScript strings (payout cards, member profile, proposal author).
+- finish-proposal: if a voter's token balance cannot be read (network error, rate limit), the vote is not closed this round instead of counting a stale or zero balance. Optional `TONAPI_KEY` secret.
 - Fix: the voting tab no longer re-renders every second when a vote has ended but is not closed yet.
 
 ## 2026-10-26
