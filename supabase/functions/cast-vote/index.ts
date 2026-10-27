@@ -156,12 +156,14 @@ Deno.serve(async (req) => {
             headers["Authorization"] = "Bearer " + TONAPI_KEY;
         }
 
+        let emptyAnswers = 0; /* сколько раз tonapi уверенно ответил «жетонов нет» */
         for (let attempt = 0; attempt < 3; attempt++) {
             try {
                 const r = await fetch(
                     `${apiBase}/v2/accounts/${encodeURIComponent(w.wallet_address)}/jettons`,
                     { headers },
                 );
+                if (r.status === 404) return 0; /* кошелёк ещё не активирован — токенов нет */
                 if (!r.ok) {
                     /* 429 или иная ошибка — ждём и пробуем ещё */
                     await new Promise((res) => setTimeout(res, 400 * (attempt + 1)));
@@ -174,6 +176,7 @@ Deno.serve(async (req) => {
                     /* Пустой ответ подозрителен: у голосующего кошелька
                        обычно есть хоть какие-то жетоны. Считаем это сбоем
                        и пробуем ещё, а не сразу нулём. */
+                    emptyAnswers++;
                     await new Promise((res) => setTimeout(res, 400 * (attempt + 1)));
                     continue;
                 }
@@ -191,8 +194,12 @@ Deno.serve(async (req) => {
                 await new Promise((res) => setTimeout(res, 400 * (attempt + 1)));
             }
         }
-        /* Все попытки не дали надёжного ответа — не засчитываем голос с
-           ложным нулём, просим повторить позже. */
+        /* tonapi все три раза нормально ответил «пусто» — значит, жетонов
+           на кошельке правда нет: вес 0, голос принимается. Раньше такой
+           человек не мог проголосовать вообще («блокчейн недоступен»). */
+        if (emptyAnswers === 3) return 0;
+        /* Были ошибки сети — не засчитываем голос с ложным нулём,
+           просим повторить позже. */
         return null;
     }
 
