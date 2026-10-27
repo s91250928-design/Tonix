@@ -7,6 +7,8 @@
 - Members' proposals are created as `pending`; the owner or an admin approves (voting starts at approval time, for the duration the author chose) or rejects with a reason.
 - Enforced by the database: pending proposals are hidden from everyone except the author and moderators (restrictive RLS), cannot be voted on (trigger on `dao_votes`), and cannot be published by a direct UPDATE (trigger). Approval only through `tonix_moderate_proposal`.
 - Migration: `sql/2026-10-27-proposal-moderation.sql` (run before deploying the site).
+- Moderation panel for the owner and admins: approve/reject new proposals and take down live votes (`removed` status, `tonix_moderate`). Migration: `sql/2026-10-27-moderation-panel.sql`.
+- Fix: the voting tab no longer re-renders every second when a vote has ended but is not closed yet.
 
 ## 2026-10-26
 

@@ -251,6 +251,19 @@
     .prop.pending{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
     .mod-box{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border2);font-size:13px;color:var(--dim);line-height:1.45}
     .mod-btns{display:flex;gap:8px;margin-top:10px}
+    .mod-panel-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));background:color-mix(in srgb,var(--accent) 9%,var(--surface));color:var(--text);font-family:inherit;cursor:pointer}
+    .mod-panel-btn:hover{background:color-mix(in srgb,var(--accent) 15%,var(--surface))}
+    .mp-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);flex:none}
+    .mp-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .mp-t{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.mp-t small{color:var(--dim);font-size:12px}
+    .mp-n{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center}
+    .mod-panel{display:flex;flex-direction:column;gap:18px;margin-top:12px;max-height:70vh;overflow-y:auto}
+    .mod-sec h3{font-size:14px;margin:0 0 8px;display:flex;gap:8px;align-items:center}.mod-sec h3 span{color:var(--dim);font-weight:500}
+    .mod-card{padding:12px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);margin-bottom:8px}
+    .mod-card .mc-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim)}
+    .mod-card h4{margin:6px 0 4px;font-size:15px}.mod-card p{margin:0;font-size:13px;color:var(--dim);line-height:1.45;word-break:break-word}
+    .mod-card .mc-act{margin-top:6px;font-size:12.5px;color:var(--accent)}
+    .mod-empty{font-size:13px;color:var(--dim);margin:0}
     .mod-btns .vbtn.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--border2));color:var(--ok)}
     .mod-btns .vbtn.no{border-color:color-mix(in srgb,var(--bad) 45%,var(--border2));color:var(--bad)}
     .prop h3{font-size:17px;margin-bottom:6px}.prop .desc{font-size:13.5px;color:var(--dim);margin-bottom:15px}
@@ -939,7 +952,7 @@
 <script src="js/supabase-init.js?v=20260719-11"></script>
 <script src="js/tonapi.js?v=20261018-1"></script>
 <script src="js/chat.js?v=20260722-3"></script>
-<script src="js/governance.js?v=20261027-1"></script>
+<script src="js/governance.js?v=20261027-2"></script>
 <script src="js/auth.js?v=20261021-3"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
 <script src="js/treasury.js?v=20261018-2"></script>
@@ -5030,7 +5043,7 @@
             var tmap={};props.forEach(function(p){tmap[p.id]=p.title;});
             var ev=[];
             props.forEach(function(p){
-                if(p.status==='pending'||p.status==='moderation_rejected')return;
+                if(p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')return;
                 ev.push({t:p.created_at,txt:nm(p.author_uid)+(T('g_created_prop'))+tonixEsc(p.title)+'»'});
                 if(p.status==='executed'&&p.executed_at)ev.push({t:p.executed_at,txt:(T('g_prop_q'))+tonixEsc(p.title)+(T('g_exec_setting'))});
                 if(p.status==='rejected')ev.push({t:p.ends_at,txt:(T('g_prop_q'))+tonixEsc(p.title)+(T('g_rejected_q'))});
@@ -5061,7 +5074,7 @@
             box.innerHTML='<p>'+tonixEsc(T('g_props_empty'))+'</p>';
             return;
         }
-        list=list.filter(function(p){return p.status!=='pending'&&p.status!=='moderation_rejected';}).slice(0,3);
+        list=list.filter(function(p){return p.status!=='pending'&&p.status!=='moderation_rejected'&&p.status!=='removed';}).slice(0,3);
         box.className='';
         box.style.textAlign='left';
         var h='';
@@ -5186,18 +5199,21 @@
         var st=null,list=[];
         try{st=await getDaoSettings(dk);}catch(e){}
         try{list=await listProposals(dk);}catch(e){}
-        /* Модерация: предложения на проверке — наверху. Их видят только автор,
-           владелец и админы (это ограничивает сама база). */
+        /* Модерация. Владелец и админы разбирают новые и снимают идущие
+           голосования в отдельной «Панели модерации»; в общем списке у них
+           только опубликованное. Участник видит свои предложения на проверке
+           (остальным база их не отдаёт). */
         var staff=false;try{staff=await isDaoStaff(dk);}catch(e){}
         var modOn=!st||st.proposal_moderation!==false;
+        var isModSt=function(p){return p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed';};
+        window._tonixModList=list;
         var pendN=list.filter(function(p){return p.status==='pending';}).length;
-        list.sort(function(a,b){return (b.status==='pending')-(a.status==='pending');});
+        if(staff)list=list.filter(function(p){return !isModSt(p);});
+        else list.sort(function(a,b){return (b.status==='pending')-(a.status==='pending');});
         var h='<div class="sec-h"><h2>'+(T('g_votes_h'))+'</h2><span class="link" onclick="tonixNewProposal()">'+(T('g_new_prop_btn'))+'</span></div>';
+        if(staff)h+='<button class="mod-panel-btn" type="button" onclick="tonixModPanel()"><span class="mp-ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span class="mp-t"><b>'+(ru?'Панель модерации':'Moderation panel')+'</b><small>'+(ru?'Одобрение новых предложений и снятие идущих голосований':'Approve new proposals and take down live votes')+'</small></span>'+(pendN?'<span class="mp-n">'+pendN+'</span>':'')+'</button>';
         h+='<div id="delegBox" class="ginfo" style="margin-bottom:16px">'+await tonixDelegHtml(dk)+'</div>';
-        if(modOn)h+='<div class="mod-box" style="margin:0 0 14px">'+(staff
-            ?(ru?('🛡 Модерация включена: предложения участников публикуются только после одобрения владельца или админа.'+(pendN?(' <b style="color:var(--accent)">Ждут проверки: '+pendN+'</b>'):''))
-                :('🛡 Moderation is on: members\' proposals go live only after an owner or admin approves them.'+(pendN?(' <b style="color:var(--accent)">Awaiting review: '+pendN+'</b>'):'')))
-            :(ru?'🛡 Новые предложения публикуются после проверки владельцем или админом DAO.':'🛡 New proposals go live after the DAO owner or an admin reviews them.'))+'</div>';
+        if(modOn&&!staff)h+='<div class="mod-box" style="margin:0 0 14px">'+(ru?'Новые предложения публикуются после проверки владельцем или админом DAO.':'New proposals go live after the DAO owner or an admin reviews them.')+'</div>';
         if(st)h+='<div style="font-size:13px;color:var(--dim);margin:-6px 0 14px">'+(T('g_cur_thr'))+'<b style="color:var(--text)">'+tonixEsc(st.entry_threshold_ton)+' TON</b>'+(T('g_auto_exec'))+'</div>';
         if(!list.length)h+='<div style="color:var(--dim);font-size:14px;padding:18px 0">'+(T('g_no_props'))+'</div>';
         list.forEach(function(p){
@@ -5208,6 +5224,8 @@
             else if(p.status==='rejected')stb='<span class="st st-rej">'+(T('g_rejected'))+'</span>';
             else if(p.status==='pending')stb='<span class="st st-pend">'+(ru?'На модерации':'Under review')+'</span>';
             else if(p.status==='moderation_rejected')stb='<span class="st st-rej">'+(ru?'Не прошло модерацию':'Rejected by moderator')+'</span>';
+            else if(p.status==='removed')stb='<span class="st st-rej">'+(ru?'Снято модератором':'Removed by moderator')+'</span>';
+            else if(p.expired)stb='<span class="st st-active">'+(ru?'Подводим итоги…':'Counting…')+'</span>';
             else stb='<span class="st st-active" data-ends="'+tonixEsc(p.endsAt)+'">'+(T('g_active_dot'))+proposalTimeLeft(p.endsAt,curLang)+'</span>';
             var action='';
             if(p.actionType==='set_entry_threshold'&&p.actionValue!=null)action='<div style="font-size:12.5px;color:var(--accent);margin-top:5px">'+(T('g_on_pass'))+tonixEsc(p.actionValue)+' TON</div>';
@@ -5240,21 +5258,15 @@
             }
             var btns='';
             if(p.status==='pending'){
-                var dur=p.voteMinutes?tonixDurText(p.voteMinutes,ru):'';
-                btns=staff
-                    ? '<div class="mod-box">'+(ru?('Проверьте предложение. После одобрения оно увидят все участники и сразу начнётся голосование'+(dur?(' на '+dur):'')+'.')
-                                                 :('Review this proposal. Once approved, all members will see it and voting starts'+(dur?(' for '+dur):'')+'.'))+
-                      '<div class="mod-btns"><button class="vbtn ok" onclick="tonixModerate(\''+p.id+'\',true)">'+(ru?'Одобрить и опубликовать':'Approve & publish')+'</button>'+
-                      '<button class="vbtn no" onclick="tonixModerate(\''+p.id+'\',false)">'+(ru?'Отклонить':'Reject')+'</button></div></div>'
-                    : '<div class="mod-box">'+(ru?'Предложение ждёт проверки владельцем или админом. Пока его видите только вы и модераторы.':'Waiting for the owner or an admin to review. Only you and moderators can see it for now.')+'</div>';
-            }else if(p.status==='moderation_rejected'){
-                btns='<div class="mod-box">'+(ru?'Модератор отклонил предложение':'A moderator rejected this proposal')+(p.moderationNote?(': '+tonixEsc(p.moderationNote)):'.')+'</div>';
+                btns='<div class="mod-box">'+(ru?'Предложение ждёт проверки владельцем или админом. Пока его видите только вы и модераторы.':'Waiting for the owner or an admin to review. Only you and moderators can see it for now.')+'</div>';
+            }else if(p.status==='moderation_rejected'||p.status==='removed'){
+                btns='<div class="mod-box">'+(p.status==='removed'?(ru?'Модератор снял голосование':'A moderator removed this vote'):(ru?'Модератор отклонил предложение':'A moderator rejected this proposal'))+(p.moderationNote?(': '+tonixEsc(p.moderationNote)):'.')+'</div>';
             }
             if(p.status==='active'&&!p.expired){
                 if(p.myChoice)btns='<div style="font-size:13px;color:var(--dim);margin-top:10px">'+(T('g_your_vote'))+(p.myChoice==='yes'?(T('g_yes')):(T('g_no')))+'</div>';
                 else btns='<div class="vbtns"><button class="vbtn y" onclick="tonixVoteClick(\''+p.id+'\',\'yes\')">'+(T('g_yes'))+'</button><button class="vbtn n" onclick="tonixVoteClick(\''+p.id+'\',\'no\')">'+(T('g_no'))+'</button></div>';
             }
-            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
+            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
         });
         box.innerHTML=h;
         tonixVoteTimers();
@@ -5267,31 +5279,73 @@
         if(min%60===0)return (min/60)+(ru?' ч':' h');
         return min+(ru?' мин':' min');
     }
-    /* Одобрить / отклонить предложение (владелец и админы DAO) */
+    /* ═══ Панель модерации (только владелец и админы) ═══
+       «Ждут проверки» — одобрить или отклонить новые предложения участников.
+       «Идут сейчас» — снять голосование, если в нём что-то недопустимое.
+       «История» — что уже отклонено или снято. Права проверяет база. */
+    function tonixModCard(p,kind,ru){
+        var dur=p.voteMinutes?tonixDurText(p.voteMinutes,ru):'';
+        var act='';
+        if(p.actionType==='payout'&&p.payoutAmount!=null)act=(ru?'Выплата из казны: ':'Treasury payout: ')+tonixEsc(p.payoutAmount)+' '+tonixEsc(p.payoutSymbol||'TON');
+        else if(p.actionType==='set_entry_threshold'&&p.actionValue!=null)act=(ru?'Порог входа → ':'Entry threshold → ')+tonixEsc(p.actionValue)+' TON';
+        else if(p.actionType==='remove_member')act=(ru?'Исключение участника':'Remove a member');
+        var b='';
+        if(kind==='pending')b='<div class="mod-btns"><button class="vbtn ok" onclick="tonixModerate(\''+p.id+'\',\'approve\')">'+(ru?'Одобрить':'Approve')+'</button><button class="vbtn no" onclick="tonixModerate(\''+p.id+'\',\'reject\')">'+(ru?'Отклонить':'Reject')+'</button></div>';
+        else if(kind==='live')b='<div class="mod-btns"><button class="vbtn no" onclick="tonixModerate(\''+p.id+'\',\'remove\')">'+(ru?'Снять с голосования':'Take down')+'</button></div>';
+        var meta=kind==='pending'?(dur?((ru?'Голосование после одобрения: ':'Voting after approval: ')+dur):'')
+                :kind==='live'?(ru?('Идёт · голосов: '+((p.yesPeople||0)+(p.noPeople||0))):('Live · votes: '+((p.yesPeople||0)+(p.noPeople||0))))
+                :((p.status==='removed'?(ru?'Снято':'Removed'):(ru?'Отклонено':'Rejected'))+(p.moderationNote?(' · '+tonixEsc(p.moderationNote)):''));
+        return '<div class="mod-card" data-mod="'+tonixEsc(p.id)+'"><div class="mc-top"><span>'+tonixEsc(p.authorName||'')+'</span><small>'+meta+'</small></div><h4>'+tonixEsc(p.title)+'</h4>'+
+            (p.description?'<p>'+tonixEsc(p.description)+'</p>':'')+(act?'<div class="mc-act">'+act+'</div>':'')+b+'</div>';
+    }
+    async function tonixModPanel(refresh){
+        var ru=(curLang==='ru'),dk=window._tonixDaoKey||'';
+        var list=window._tonixModList||[];
+        if(refresh){try{list=await listProposals(dk);window._tonixModList=list;}catch(e){}}
+        var pend=list.filter(function(p){return p.status==='pending';});
+        var live=list.filter(function(p){return p.status==='active'&&!p.expired;});
+        var hist=list.filter(function(p){return p.status==='moderation_rejected'||p.status==='removed';});
+        var sec=function(t,arr,kind,empty){return '<div class="mod-sec"><h3>'+t+' <span>'+arr.length+'</span></h3>'+(arr.length?arr.map(function(p){return tonixModCard(p,kind,ru);}).join(''):'<p class="mod-empty">'+empty+'</p>')+'</div>';};
+        var html='<span class="mclose" onclick="closeModal()">✕</span><h3>'+(ru?'Панель модерации':'Moderation panel')+'</h3>'+
+            '<div class="msub">'+(ru?'Видят только владелец и админы DAO.':'Only the DAO owner and admins see this.')+'</div><div class="mod-panel">'+
+            sec(ru?'Ждут проверки':'Awaiting review',pend,'pending',ru?'Новых предложений нет.':'No new proposals.')+
+            sec(ru?'Идут сейчас':'Live votes',live,'live',ru?'Сейчас голосований нет.':'No live votes.')+
+            (hist.length?sec(ru?'История модерации':'Moderation history',hist,'hist',''):'')+'</div>';
+        showModal(html);
+    }
+    function tonixDurText(min,ru){
+        if(min%1440===0){var dd=min/1440;return dd+(ru?((dd%10===1&&dd%100!==11)?' день':((dd%10>=2&&dd%10<=4&&(dd%100<10||dd%100>=20))?' дня':' дней')):(dd===1?' day':' days'));}
+        if(min%60===0)return (min/60)+(ru?' ч':' h');
+        return min+(ru?' мин':' min');
+    }
     var _tonixModBusy=false;
-    async function tonixModerate(id,approve){
+    async function tonixModerate(id,action){
         if(_tonixModBusy)return;
         var ru=(curLang==='ru');
         var note=null;
-        if(!approve){
-            note=prompt(ru?'Причина отказа (её увидит автор). Можно оставить пустым.':'Reason (the author will see it). Optional.','');
+        if(action==='reject'||action==='remove'){
+            note=prompt(action==='remove'
+                ?(ru?'Снять голосование? Его больше никто не увидит и голоса не засчитаются. Причина (увидит автор), можно пусто:':'Take this vote down? Nobody will see it and votes will not count. Reason (the author will see it), optional:')
+                :(ru?'Причина отказа (её увидит автор). Можно оставить пустым.':'Reason (the author will see it). Optional.'),'');
             if(note===null)return;
         }
         _tonixModBusy=true;
-        var card=document.querySelector('[data-prop="'+id+'"]');
+        var card=document.querySelector('[data-mod="'+id+'"]');
         if(card)card.querySelectorAll('button').forEach(function(b){b.disabled=true;b.style.opacity=.5;});
         try{
-            var r=await moderateProposal(id,approve,note);
-            if(!r.ok){ tonixNotice(ru?'Не получилось':'Failed', r.error||'', 'warn'); return; }
-            tonixNotice(approve?(ru?'Опубликовано':'Published'):(ru?'Отклонено':'Rejected'),
-                approve?(ru?'Голосование началось — участники его уже видят.':'Voting has started — members can see it now.')
-                       :(ru?'Автор увидит, что предложение не прошло модерацию.':'The author will see it was rejected.'),'ok');
+            var r=await moderateProposal(id,action,note);
+            if(!r.ok){ tonixNotice(ru?'Не получилось':'Failed', r.error||'', 'warn'); if(card)card.querySelectorAll('button').forEach(function(b){b.disabled=false;b.style.opacity=1;}); return; }
+            var msg={approve:[ru?'Опубликовано':'Published',ru?'Голосование началось — участники его уже видят.':'Voting has started.'],
+                     reject:[ru?'Отклонено':'Rejected',ru?'Автор увидит, что предложение не прошло модерацию.':'The author will see it was rejected.'],
+                     remove:[ru?'Голосование снято':'Vote removed',ru?'Его больше не видят участники, голоса не засчитаются.':'Members no longer see it; votes will not count.']}[action];
+            tonixNotice(msg[0],msg[1],'ok');
+            await tonixModPanel(true);
         }finally{
             _tonixModBusy=false;
             tonixVoteTabOpened();
         }
     }
-    var _tonixVoteTick=null;
+    var _tonixVoteTick=null,_tonixEndedSeen={};
     function tonixVoteTimers(){
         if(_tonixVoteTick){clearInterval(_tonixVoteTick);_tonixVoteTick=null;}
         var box=document.getElementById('voteContent');if(!box)return;
@@ -5303,7 +5357,16 @@
             var finished=false;
             Array.prototype.forEach.call(list,function(el){
                 var ends=el.getAttribute('data-ends');
-                if(new Date(ends).getTime()-Date.now()<=0)finished=true;
+                if(new Date(ends).getTime()-Date.now()<=0){
+                    /* Срок вышел: перерисовываем вкладку ОДИН раз на голосование.
+                       Раньше, если сервер не успевал закрыть голосование, вкладка
+                       перерисовывалась каждую секунду бесконечно. */
+                    var card=el.closest('[data-prop]'),pid=card?card.getAttribute('data-prop'):ends;
+                    el.removeAttribute('data-ends');
+                    el.textContent=(curLang==='ru')?'Подводим итоги…':'Counting…';
+                    if(!_tonixEndedSeen[pid]){_tonixEndedSeen[pid]=1;finished=true;}
+                    return;
+                }
                 el.textContent=(T('g_active_dot'))+proposalTimeLeft(ends,curLang);
             });
             if(finished){clearInterval(_tonixVoteTick);_tonixVoteTick=null;tonixVoteTabOpened();

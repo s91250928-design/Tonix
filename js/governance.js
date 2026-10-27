@@ -200,19 +200,24 @@ async function govCreateProposal(daoKey, title, description, action, durationMin
     return { ok: true, proposal: data, pending: !!(data && data.status === 'pending') };
 }
 
-// --- Модерация: одобрить или отклонить предложение (владелец и админы) ---
-// Проверку прав и смену статуса делает база (tonix_moderate_proposal):
-// подменить её из браузера нельзя. При одобрении голосование стартует сейчас.
-async function moderateProposal(proposalId, approve, note) {
+// --- Модерация (владелец и админы) ---
+// action: 'approve' — опубликовать (голосование стартует сейчас), 'reject' — отклонить,
+// 'remove' — снять уже идущее голосование. Права и смену статуса проверяет база.
+async function moderateProposal(proposalId, action, note) {
     if (!currentUID) return { ok: false, error: 'Сначала войди кошельком' };
-    const { data, error } = await sb.rpc('tonix_moderate_proposal', {
-        p_id: proposalId, p_approve: !!approve, p_note: note || null
-    });
+    if (action === true) action = 'approve';
+    if (action === false) action = 'reject';
+    let { data, error } = await sb.rpc('tonix_moderate', { p_id: proposalId, p_action: action, p_note: note || null });
+    if (error && action !== 'remove' && /tonix_moderate/.test(error.message || '')) {
+        // вторая миграция ещё не запущена — одобрение/отказ старой функцией
+        ({ data, error } = await sb.rpc('tonix_moderate_proposal', { p_id: proposalId, p_approve: action === 'approve', p_note: note || null }));
+    }
     if (error) { console.error('[Gov] moderate:', error.message); return { ok: false, error: error.message }; }
     if (!data || !data.ok) {
         const map = {
-            'not-staff': 'Одобрять предложения могут только владелец и админы DAO',
+            'not-staff': 'Это могут только владелец и админы DAO',
             'not-pending': 'Предложение уже рассмотрено',
+            'not-active': 'Голосование уже закончилось или снято',
             'no-proposal': 'Предложение не найдено',
             'no-session': 'Войди заново'
         };
