@@ -271,6 +271,7 @@ async function voteProposal(proposalId, choice) {
         if (err === 'voting-closed') return { ok: false, error: 'Голосование уже закрыто' };
         if (err === 'not-member') return { ok: false, error: 'Голосуют только участники DAO' };
         if (err === 'you-delegated') return { ok: false, error: 'Ты отдал(а) свой голос делегату. Чтобы голосовать самому, сначала отзови делегирование.' };
+        if (err === 'no-tokens') return { ok: false, error: 'На твоём кошельке нет токенов ' + ((j && j.symbol) || 'DAO') + ' — без них голосовать нельзя' };
         if (err === 'chain-unavailable') return { ok: false, error: 'Блокчейн сейчас недоступен — попробуй через минуту' };
         console.error('[Gov] vote:', err);
         return { ok: false, error: err };

@@ -215,6 +215,12 @@ Deno.serve(async (req) => {
         .select("delegator_uid").eq("dao_key", p.dao_key)
         .eq("delegate_uid", uid);
 
+    /* Токенов нет и никто не отдал свой вес — голос ничего не весит.
+       Говорим прямо «нет токенов», а не «блокчейн недоступен». */
+    if (st?.vote_jetton && ownW === 0 && (incoming || []).length === 0) {
+        return reply({ ok: false, error: "no-tokens", symbol }, 403);
+    }
+
     /* Строка собственного голоса */
     const rows: Array<Record<string, unknown>> = [
         { proposal_id: propId, voter_uid: uid, choice, weight: ownW },
