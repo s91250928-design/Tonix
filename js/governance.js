@@ -212,7 +212,11 @@ async function moderateProposal(proposalId, action, note) {
         // вторая миграция ещё не запущена — одобрение/отказ старой функцией
         ({ data, error } = await sb.rpc('tonix_moderate_proposal', { p_id: proposalId, p_approve: action === 'approve', p_note: note || null }));
     }
-    if (error) { console.error('[Gov] moderate:', error.message); return { ok: false, error: error.message }; }
+    if (error) {
+        console.error('[Gov] moderate:', error.message);
+        if (/tonix_moderate/.test(error.message || '')) return { ok: false, error: 'На сервере ещё не включена эта функция: нужно запустить SQL-файл 2026-10-27-moderation-panel.sql в Supabase' };
+        return { ok: false, error: error.message };
+    }
     if (!data || !data.ok) {
         const map = {
             'not-staff': 'Это могут только владелец и админы DAO',

@@ -251,6 +251,8 @@
     .prop.pending{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
     .mod-box{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border2);font-size:13px;color:var(--dim);line-height:1.45}
     .mod-btns{display:flex;gap:8px;margin-top:10px}
+    .mod-remove{background:none;border:1px solid color-mix(in srgb,var(--bad) 40%,var(--border2));color:var(--bad);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+    .mod-remove:hover{background:color-mix(in srgb,var(--bad) 10%,transparent)}
     .mod-panel-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));background:color-mix(in srgb,var(--accent) 9%,var(--surface));color:var(--text);font-family:inherit;cursor:pointer}
     .mod-panel-btn:hover{background:color-mix(in srgb,var(--accent) 15%,var(--surface))}
     .mp-ic{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);flex:none}
@@ -952,7 +954,7 @@
 <script src="js/supabase-init.js?v=20260719-11"></script>
 <script src="js/tonapi.js?v=20261018-1"></script>
 <script src="js/chat.js?v=20260722-3"></script>
-<script src="js/governance.js?v=20261027-2"></script>
+<script src="js/governance.js?v=20261027-3"></script>
 <script src="js/auth.js?v=20261021-3"></script>
 <script src="js/telegram.js?v=20260721-2"></script>
 <script src="js/treasury.js?v=20261018-2"></script>
@@ -5266,6 +5268,8 @@
                 if(p.myChoice)btns='<div style="font-size:13px;color:var(--dim);margin-top:10px">'+(T('g_your_vote'))+(p.myChoice==='yes'?(T('g_yes')):(T('g_no')))+'</div>';
                 else btns='<div class="vbtns"><button class="vbtn y" onclick="tonixVoteClick(\''+p.id+'\',\'yes\')">'+(T('g_yes'))+'</button><button class="vbtn n" onclick="tonixVoteClick(\''+p.id+'\',\'no\')">'+(T('g_no'))+'</button></div>';
             }
+            /* Владелец и админы могут снять идущее голосование прямо с карточки (и в панели модерации) */
+            if(staff&&p.status==='active')btns+='<div data-mod="'+tonixEsc(p.id)+'" style="margin-top:10px;text-align:right"><button class="mod-remove" onclick="tonixModerate(\''+p.id+'\',\'remove\')">'+(ru?'Снять с голосования':'Take down')+'</button></div>';
             h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top"><span class="prop-id">'+tonixEsc(p.authorName)+'</span>'+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
         });
         box.innerHTML=h;
