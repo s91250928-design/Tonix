@@ -30,6 +30,33 @@ const cors = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+/* Один адрес пишется двумя способами: сырой 0:hex (так отдаёт tonapi)
+   и удобный EQ…/UQ… (так часто лежит в настройках DAO). Сравниваем
+   в приведённом виде — иначе токен «не находится» и вес выходит 0.
+   Та же функция, что в verify-payout и verify-entry-fee. */
+function normAddr(a: string | null | undefined): string {
+    if (!a) return "";
+    const s = String(a).trim();
+    if (s.includes(":")) {
+        const [wc, hash] = s.split(":");
+        return `${parseInt(wc, 10)}:${hash.toLowerCase()}`;
+    }
+    try {
+        const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+        const bin = atob(b64);
+        if (bin.length < 34) return s.toLowerCase();
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        let wc = bytes[1];
+        if (wc === 0xff) wc = -1;
+        let hex = "";
+        for (let i = 2; i < 34; i++) hex += bytes[i].toString(16).padStart(2, "0");
+        return `${wc}:${hex}`;
+    } catch {
+        return s.toLowerCase();
+    }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
@@ -80,7 +107,7 @@ Deno.serve(async (req) => {
       if (vs?.vote_jetton && (votes ?? []).length > 0) {
         const dRaw = Number(vs.vote_decimals);
         const dec = (Number.isFinite(dRaw) && dRaw >= 0) ? dRaw : 9;
-        const want = String(vs.vote_jetton).toLowerCase();
+        const want = normAddr(vs.vote_jetton);
 
         const { data: daoRow } = await sb.from("daos")
           .select("testnet").eq("slug", p.dao_key).limit(1).maybeSingle();
@@ -110,7 +137,7 @@ Deno.serve(async (req) => {
               if (r.ok) {
                 const j = await r.json();
                 for (const b of (j?.balances || [])) {
-                  if (String(b?.jetton?.address || "").toLowerCase() === want) {
+                  if (normAddr(String(b?.jetton?.address || "")) === want) {
                     return Number(b.balance) / Math.pow(10, dec);
                   }
                 }

@@ -118,6 +118,22 @@ r as (
                             and policyname in ('storage_auth_upload','storage_auth_update'))
               then 'ДЫРА: не запущен hardening-4.sql' else 'ОК' end
   union all
+  select 27, 'Старые таблицы мессенджера закрыты от браузера',
+         coalesce((select 'ДЫРА: ' || string_agg(distinct tablename, ', ') from pg_policies
+                    where schemaname = 'public' and not (roles = array['service_role']::name[])
+                      and tablename in ('call_signals','dao_applications','group_sender_keys','guild_channels',
+                          'guild_join_requests','guild_members','guild_posts','guilds','honeypot_log',
+                          'message_reactions','push_subscriptions','tier_rooms','ton_proof_challenges',
+                          'tonix_login_challenges','trust_ratings','user_public_keys','user_tiers')), 'ОК')
+  union all
+  select 28, 'Время заявки на взнос ставит база, не браузер',
+         case when exists (select 1 from trg where tgname = 'tonix_entry_ticket_guard') then 'ОК' else 'ДЫРА: не запущен hardening-5.sql' end
+  union all
+  select 29, 'Telegram-связку и поля users из браузера не подменить',
+         case when exists (select 1 from trg where tgname = 'tonix_users_guard')
+               and not exists (select 1 from pol where t = 'user_telegram' and cmd in ('UPDATE','ALL','INSERT'))
+              then 'ОК' else 'ДЫРА: не запущен hardening-5.sql' end
+  union all
   -- 24. хранилище файлов
   select 24, 'Хранилище: правила записи',
          coalesce((select 'СМОТРЕТЬ: ' || string_agg(policyname || ' [' || cmd || '] ' ||
