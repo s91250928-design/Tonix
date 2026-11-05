@@ -126,7 +126,30 @@ Deno.serve(async (req) => {
            голоса. Теперь: несколько попыток, а если баланс так и не получен —
            голосование НЕ закрываем в этот раз, оно закроется при следующем вызове. */
         const tonapiKey = Deno.env.get("TONAPI_KEY") || "";
+        /* «TON» — вес по балансу основной монеты, а не токена. Раньше здесь
+           искали токен с адресом «TON», не находили и ставили всем вес 0 —
+           голосование по TON всегда закрывалось «отклонено». Баланс берём
+           так же, как cast-vote при голосе (toncenter), с теми же правилами:
+           несколько попыток, не получили — закрытие откладываем. */
+        const isTon = vs.vote_jetton === "TON";
+        const tcBase = daoRow?.testnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
         async function jettonBalance(addr: string): Promise<number | null> {
+          if (isTon) {
+            for (let attempt = 0; attempt < 4; attempt++) {
+              try {
+                const r = await fetch(`${tcBase}/api/v2/getAddressBalance?address=${encodeURIComponent(addr)}`);
+                if (r.ok) {
+                  const j = await r.json();
+                  if (j?.ok) {
+                    const v = Number(j.result) / 1e9;
+                    return (Number.isFinite(v) && v >= 0) ? v : 0;
+                  }
+                }
+              } catch { /* сеть — пробуем ещё раз */ }
+              await new Promise((res) => setTimeout(res, 1200 * (attempt + 1)));
+            }
+            return null;
+          }
           for (let attempt = 0; attempt < 4; attempt++) {
             try {
               const r = await fetch(
