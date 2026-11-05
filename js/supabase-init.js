@@ -49,15 +49,31 @@ function initSupabase() {
 // Вход в Tonix — только через TON-кошелёк (см. auth.js).
 // Email/пароль намеренно НЕ используются: меньше кода, меньше поверхности атаки.
 
+/* Стереть пропуск входа (сессию Supabase) из памяти браузера.
+   Библиотека сама его не стирает, если сервер ответил на выход ошибкой
+   (например, пропуск уже недействителен) — и человек «застревал» вошедшим
+   без адреса, с ником «Аноним» и ошибкой bad-token при голосовании. */
+function tonixClearLocalSession() {
+    try {
+        Object.keys(localStorage)
+            .filter(function (k) { return /^sb-.+-auth-token/.test(k); })
+            .forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) { }
+    currentUID = null;
+}
+
 // --- Выход ---
 async function tonixLogout() {
-    if (!isOnlineMode || !currentUID) return;
+    if (!isOnlineMode) { tonixClearLocalSession(); return; }
     try {
-        await sb.from('users').update({ status: 'offline' }).eq('id', currentUID);
-        await sb.auth.signOut();
-        currentUID = null;
-        sb.removeAllChannels();
-    } catch (e) { console.error('Выход:', e); }
+        if (currentUID) await sb.from('users').update({ status: 'offline' }).eq('id', currentUID);
+    } catch (e) { }
+    /* Только на этом устройстве (scope: 'local'). Раньше выход закрывал вход
+       на всех устройствах сразу — в Telegram или другом браузере тот же
+       кошелёк получал bad-token. */
+    try { await sb.auth.signOut({ scope: 'local' }); } catch (e) { console.error('Выход:', e); }
+    try { sb.removeAllChannels(); } catch (e) { }
+    tonixClearLocalSession();
 }
 
 // --- Восстановление сессии ---
@@ -65,7 +81,20 @@ async function ensureAuth() {
     if (currentUID) return true;
     try {
         const { data: { session } } = await sb.auth.getSession();
-        if (session && session.user) { currentUID = session.user.id; return true; }
+        if (session && session.user) {
+            /* Пропуск в памяти ещё не значит, что он живой: проверяем у сервера.
+               Мёртвый — стираем, и человек видит обычную кнопку «Войти».
+               Если сеть недоступна (ошибка не про пропуск) — пропуск не трогаем. */
+            try {
+                const { data: u, error: ue } = await sb.auth.getUser();
+                if (ue && (ue.status === 401 || ue.status === 403 || /session|jwt|token/i.test(ue.message || ''))) {
+                    tonixClearLocalSession();
+                    return false;
+                }
+                if (u && u.user) { currentUID = u.user.id; return true; }
+            } catch (e) { }
+            currentUID = session.user.id; return true;
+        }
     } catch (e) { }
     try {
         const { data: r } = await sb.auth.refreshSession();

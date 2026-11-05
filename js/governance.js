@@ -273,6 +273,12 @@ async function voteProposal(proposalId, choice) {
         if (err === 'you-delegated') return { ok: false, error: 'Ты отдал(а) свой голос делегату. Чтобы голосовать самому, сначала отзови делегирование.' };
         if (err === 'no-tokens') return { ok: false, error: 'На твоём кошельке нет токенов ' + ((j && j.symbol) || 'DAO') + ' — без них голосовать нельзя' };
         if (err === 'chain-unavailable') return { ok: false, error: 'Блокчейн сейчас недоступен — попробуй через минуту' };
+        if (err === 'bad-token' || err === 'no-token') {
+            /* Пропуск входа устарел (например, вышли с этого кошелька на другом
+               устройстве). Стираем его — после перезагрузки будет кнопка «Войти». */
+            try { if (typeof tonixClearLocalSession === 'function') tonixClearLocalSession(); } catch (e) { }
+            return { ok: false, error: 'Сессия устарела — обнови страницу и войди кошельком заново' };
+        }
         console.error('[Gov] vote:', err);
         return { ok: false, error: err };
     } catch (e) {
