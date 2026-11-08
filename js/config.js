@@ -42,8 +42,8 @@ const TONIX_CONFIG = {
         }
     },
 
-    // Почта поддержки
-    supportEmail: "support@tonix.app"
+    // Поддержка — Telegram (почта провайдера сейчас недоступна)
+    supportTg: "@tonix_DAO_platform"
 };
 
 /* Как узнать chat_id гильдии:
