@@ -168,14 +168,26 @@
                         }
                         if (typeof filterDaos === "function" && document.getElementById("daoGrid")) filterDaos();
                         loadMemberCounts();
+                        openDaoFromUrl();
                     })
                     .catch(function () {
                         /* Без аватаров каталог всё равно должен открыться */
                         for (var i = 0; i < rows.length; i++) applyRow(rows[i]);
                         if (typeof filterDaos === "function" && document.getElementById("daoGrid")) filterDaos();
+                        openDaoFromUrl();
                     });
             })
             .catch(function (e) { console.warn("[daos] сбой загрузки:", e && e.message); });
     };
+
+    function openDaoFromUrl() {
+        if (window._tonixDaoFromUrl) return;
+        var slug = "";
+        try { slug = new URLSearchParams(location.search).get("dao") || ""; } catch (e) {}
+        slug = String(slug).trim();
+        if (!slug || !DAOS[slug] || typeof openDao !== "function") return;
+        window._tonixDaoFromUrl = true;
+        openDao(slug);
+    }
 
 })();
