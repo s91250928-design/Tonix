@@ -182,9 +182,11 @@
 
     function openDaoFromUrl() {
         if (window._tonixDaoFromUrl) return;
+        var alias = { "jetton-dao": "jetton-dao-qaqx" };
         var slug = "";
         try { slug = new URLSearchParams(location.search).get("dao") || ""; } catch (e) {}
         slug = String(slug).trim();
+        if (slug && !DAOS[slug] && alias[slug] && DAOS[alias[slug]]) slug = alias[slug];
         if (!slug || !DAOS[slug] || typeof openDao !== "function") return;
         window._tonixDaoFromUrl = true;
         openDao(slug);
