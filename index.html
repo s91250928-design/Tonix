@@ -2216,11 +2216,11 @@
     async function tonixOfferRulesTranslation(key, rules, box){
         var lang=(typeof curLang!=='undefined')?curLang:'en';
         var src=tonixGuessLang(rules.join(' '));
-        if(src===lang) return;                       /* уже на нужном языке */
-
-        var cacheKey='tonix_rules_tr_'+key+'_'+lang;
         var old=document.getElementById('rulesTrBar');
         if(old) old.remove();
+        if(src===lang) return;                       /* уже на языке интерфейса */
+
+        var cacheKey='tonix_rules_tr_'+key+'_'+lang;
         var bar=document.createElement('div');
         bar.id='rulesTrBar';
         bar.style.cssText='margin:2px 0 16px;font-size:15px;color:var(--dim);display:flex;'
@@ -2236,12 +2236,12 @@
         function show(list){
             var nodes=box.querySelectorAll('.rule p');
             list.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
-            bar.innerHTML='<span>'+T('rt_machine')+'</span>'
-                +'<span style="'+btnCss+'" id="rtOrig">'+T('rt_orig')+'</span>';
+            bar.innerHTML='<span data-i18n="rt_machine">'+T('rt_machine')+'</span>'
+                +'<span style="'+btnCss+'" id="rtOrig" data-i18n="rt_orig">'+T('rt_orig')+'</span>';
             var o=bar.querySelector('#rtOrig');
             if(o) o.onclick=function(){
                 rules.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
-                bar.innerHTML='<span style="'+btnCss+'" id="rtAgain">'+T('rt_show')+'</span>';
+                bar.innerHTML='<span style="'+btnCss+'" id="rtAgain" data-i18n="rt_show">'+T('rt_show')+'</span>';
                 var a=bar.querySelector('#rtAgain');
                 if(a) a.onclick=function(){ show(list); };
             };
@@ -2252,7 +2252,7 @@
             if(cached){ show(JSON.parse(cached)); return; }
         }catch(e){}
 
-        bar.innerHTML='<span style="'+btnCss+'" id="rtGo">'+T('rt_show')+'</span>';
+        bar.innerHTML='<span style="'+btnCss+'" id="rtGo" data-i18n="rt_show">'+T('rt_show')+'</span>';
         var go=bar.querySelector('#rtGo');
         if(!go) return;
         go.onclick=async function(){
@@ -5222,6 +5222,7 @@
             bar.style.cssText='margin-top:8px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap';
             var link=document.createElement('span');
             link.style.cssText='color:var(--accent);cursor:pointer';
+            link.setAttribute('data-i18n','mm_translate');
             link.textContent=T('mm_translate');
             bar.appendChild(link);
             var anchor=descEl||titleEl;
@@ -5236,11 +5237,13 @@
                     if(titleEl) titleEl.textContent=title;
                     if(descEl) descEl.textContent=desc;
                     link.textContent=T('mm_translate');
+                    link.setAttribute('data-i18n','mm_translate');
                     var old=bar.querySelector('.prop-trlbl'); if(old) old.remove();
                     showing=false;
                     return;
                 }
                 link.textContent=T('mt_working');
+                link.setAttribute('data-i18n','mt_working');
                 try{
                     var trT=title, trD=desc, cached=null;
                     try{ cached=localStorage.getItem(cacheKey); }catch(e){}
@@ -5252,16 +5255,18 @@
                         var okT=!title, okD=!desc;
                         if(title){ var a=await tonixTranslate(title, lang, 'auto'); if(a){ trT=a; okT=true; } }
                         if(desc){ var b=await tonixTranslate(desc, lang, 'auto'); if(b){ trD=b; okD=true; } }
-                        if(!okT && !okD){ link.textContent=T('mt_failed'); return; }
+                        if(!okT && !okD){ link.textContent=T('mt_failed'); link.setAttribute('data-i18n','mt_failed'); return; }
                         try{ localStorage.setItem(cacheKey, JSON.stringify({t:trT,d:trD})); }catch(e){}
                     }
-                    if(!trT && !trD){ link.textContent=T('mt_failed'); return; }
+                    if(!trT && !trD){ link.textContent=T('mt_failed'); link.setAttribute('data-i18n','mt_failed'); return; }
                     if(titleEl) titleEl.textContent=trT||title;
                     if(descEl) descEl.textContent=trD||desc;
                     var same=(trT||'').trim()===(title||'').trim() && (trD||'').trim()===(desc||'').trim();
                     link.textContent=T('rt_orig');
+                    link.setAttribute('data-i18n','rt_orig');
                     var lbl=document.createElement('span');
                     lbl.className='prop-trlbl';
+                    lbl.setAttribute('data-i18n', same?'mt_same':'mt_machine');
                     lbl.textContent=same?T('mt_same'):T('mt_machine');
                     bar.appendChild(lbl);
                     showing=true;
