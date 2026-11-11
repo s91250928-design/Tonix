@@ -5194,6 +5194,74 @@
         }
     }
 
+    /* Заголовок и описание предложения — авторский текст, как правила и сообщения.
+       Переводим тем же машинным переводчиком, подписываем как машинный,
+       оригинал возвращается повторным нажатием. */
+    function tonixWireVoteTranslations(root){
+        if(!root) return;
+        var lang=(typeof curLang!=='undefined')?curLang:'en';
+        root.querySelectorAll('.prop, .mod-card').forEach(function(card){
+            if(card.querySelector('.prop-tr')) return;
+            var titleEl=card.querySelector('.prop-title');
+            var descEl=card.querySelector('.prop-desc');
+            var title=titleEl?titleEl.textContent:'';
+            var desc=descEl?descEl.textContent:'';
+            if(!(title||desc).trim()) return;
+            var bar=document.createElement('div');
+            bar.className='prop-tr';
+            bar.style.cssText='margin-top:8px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+            var link=document.createElement('span');
+            link.style.cssText='color:var(--accent);cursor:pointer';
+            link.textContent=T('mm_translate');
+            bar.appendChild(link);
+            var anchor=descEl||titleEl;
+            if(anchor.nextSibling) anchor.parentNode.insertBefore(bar, anchor.nextSibling);
+            else anchor.parentNode.appendChild(bar);
+            var showing=false;
+            var id=card.getAttribute('data-prop')||card.getAttribute('data-mod')||'';
+            var cacheKey='tonix_ptr_'+id+'_'+lang;
+            link.onclick=async function(ev){
+                if(ev) ev.stopPropagation();
+                if(showing){
+                    if(titleEl) titleEl.textContent=title;
+                    if(descEl) descEl.textContent=desc;
+                    link.textContent=T('mm_translate');
+                    var old=bar.querySelector('.prop-trlbl'); if(old) old.remove();
+                    showing=false;
+                    return;
+                }
+                link.textContent=T('mt_working');
+                try{
+                    var trT=title, trD=desc, cached=null;
+                    try{ cached=localStorage.getItem(cacheKey); }catch(e){}
+                    if(cached){
+                        var o=JSON.parse(cached);
+                        trT=o.t!=null?o.t:title;
+                        trD=o.d!=null?o.d:desc;
+                    }else{
+                        var okT=!title, okD=!desc;
+                        if(title){ var a=await tonixTranslate(title, lang, 'auto'); if(a){ trT=a; okT=true; } }
+                        if(desc){ var b=await tonixTranslate(desc, lang, 'auto'); if(b){ trD=b; okD=true; } }
+                        if(!okT && !okD){ link.textContent=T('mt_failed'); return; }
+                        try{ localStorage.setItem(cacheKey, JSON.stringify({t:trT,d:trD})); }catch(e){}
+                    }
+                    if(!trT && !trD){ link.textContent=T('mt_failed'); return; }
+                    if(titleEl) titleEl.textContent=trT||title;
+                    if(descEl) descEl.textContent=trD||desc;
+                    var same=(trT||'').trim()===(title||'').trim() && (trD||'').trim()===(desc||'').trim();
+                    link.textContent=T('rt_orig');
+                    var lbl=document.createElement('span');
+                    lbl.className='prop-trlbl';
+                    lbl.textContent=same?T('mt_same'):T('mt_machine');
+                    bar.appendChild(lbl);
+                    showing=true;
+                }catch(e){
+                    link.textContent=T('mt_failed');
+                }
+            };
+        });
+    }
+
     async function tonixVoteTabOpened(){
         var dk=window._tonixDaoKey||'';
         if(!dk||!TONIX_CONFIG.daoChats[dk])return; /* нет ключа или чата — нечего показывать */
@@ -5274,9 +5342,10 @@
             }
             /* Владелец и админы могут снять идущее голосование прямо с карточки (и в панели модерации) */
             if(staff&&p.status==='active')btns+='<div data-mod="'+tonixEsc(p.id)+'" style="margin-top:10px;text-align:right"><button class="mod-remove" onclick="tonixModerate(\''+p.id+'\',\'remove\')">'+(ru?'Снять с голосования':'Take down')+'</button></div>';
-            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top">'+tonixAuthorChip(p)+stb+'</div><h3>'+tonixEsc(p.title)+'</h3>'+(p.description?'<p style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
+            h+='<div class="prop'+(p.status==='pending'?' pending':'')+'" data-prop="'+tonixEsc(p.id)+'"><div class="prop-top">'+tonixAuthorChip(p)+stb+'</div><h3 class="prop-title">'+tonixEsc(p.title)+'</h3>'+(p.description?'<p class="prop-desc" style="font-size:13.5px;color:var(--dim);margin:6px 0 0">'+tonixEsc(p.description)+'</p>':'')+action+((p.status==='pending'||p.status==='moderation_rejected'||p.status==='removed')?'':'<div class="barwrap"><div class="barrow"><span style="color:var(--ok)">'+(T('g_yes_dot'))+tonixVoteScore(p.yes,p.yesPeople,p.voteSymbol)+'</span><span style="color:var(--bad)">'+(T('g_no_dot'))+tonixVoteScore(p.no,p.noPeople,p.voteSymbol)+'</span></div><div class="bar"><span style="width:'+py+'%"></span></div></div>')+btns+'</div>';
         });
         box.innerHTML=h;
+        tonixWireVoteTranslations(box);
         tonixVoteTimers();
     }
     /* Живой отсчёт: раз в секунду обновляем текст в бейджах активных
@@ -5332,8 +5401,8 @@
         var meta=kind==='pending'?(dur?((ru?'Голосование после одобрения: ':'Voting after approval: ')+dur):'')
                 :kind==='live'?(ru?('Идёт · голосов: '+((p.yesPeople||0)+(p.noPeople||0))):('Live · votes: '+((p.yesPeople||0)+(p.noPeople||0))))
                 :((p.status==='removed'?(ru?'Снято':'Removed'):(ru?'Отклонено':'Rejected'))+(p.moderationNote?(' · '+tonixEsc(p.moderationNote)):''));
-        return '<div class="mod-card" data-mod="'+tonixEsc(p.id)+'"><div class="mc-top">'+tonixAuthorChip(p)+'<small>'+meta+'</small></div><h4>'+tonixEsc(p.title)+'</h4>'+
-            (p.description?'<p>'+tonixEsc(p.description)+'</p>':'')+(act?'<div class="mc-act">'+act+'</div>':'')+b+'</div>';
+        return '<div class="mod-card" data-mod="'+tonixEsc(p.id)+'"><div class="mc-top">'+tonixAuthorChip(p)+'<small>'+meta+'</small></div><h4 class="prop-title">'+tonixEsc(p.title)+'</h4>'+
+            (p.description?'<p class="prop-desc">'+tonixEsc(p.description)+'</p>':'')+(act?'<div class="mc-act">'+act+'</div>':'')+b+'</div>';
     }
     async function tonixModPanel(refresh){
         var ru=(curLang==='ru'),dk=window._tonixDaoKey||'';
@@ -5349,6 +5418,7 @@
             sec(ru?'Идут сейчас':'Live votes',live,'live',ru?'Сейчас голосований нет.':'No live votes.')+
             (hist.length?sec(ru?'История модерации':'Moderation history',hist,'hist',''):'')+'</div>';
         showModal(html);
+        tonixWireVoteTranslations(document.getElementById('modalBox'));
     }
     function tonixDurText(min,ru){
         if(min%1440===0){var dd=min/1440;return dd+(ru?((dd%10===1&&dd%100!==11)?' день':((dd%10>=2&&dd%10<=4&&(dd%100<10||dd%100>=20))?' дня':' дней')):(dd===1?' day':' days'));}
