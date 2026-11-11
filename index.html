@@ -2219,20 +2219,29 @@
         if(src===lang) return;                       /* уже на нужном языке */
 
         var cacheKey='tonix_rules_tr_'+key+'_'+lang;
+        var old=document.getElementById('rulesTrBar');
+        if(old) old.remove();
         var bar=document.createElement('div');
-        bar.style.cssText='margin-top:12px;font-size:12.5px;color:var(--dim);display:flex;'
-            +'align-items:center;gap:8px;flex-wrap:wrap';
-        box.appendChild(bar);
+        bar.id='rulesTrBar';
+        bar.style.cssText='margin:2px 0 16px;font-size:15px;color:var(--dim);display:flex;'
+            +'align-items:center;gap:12px;flex-wrap:wrap';
+        var btnCss='display:inline-flex;align-items:center;padding:10px 16px;border-radius:12px;'
+            +'background:rgba(45,131,236,.14);border:1px solid rgba(45,131,236,.5);'
+            +'color:var(--accent);font-size:15px;font-weight:650;cursor:pointer;line-height:1.2';
+        var page=document.getElementById('d-rules');
+        var head=page&&page.querySelector('.sec-h');
+        if(head) head.insertAdjacentElement('afterend', bar);
+        else box.insertBefore(bar, box.firstChild);
 
         function show(list){
             var nodes=box.querySelectorAll('.rule p');
             list.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
             bar.innerHTML='<span>'+T('rt_machine')+'</span>'
-                +'<span style="color:var(--accent);cursor:pointer" id="rtOrig">'+T('rt_orig')+'</span>';
+                +'<span style="'+btnCss+'" id="rtOrig">'+T('rt_orig')+'</span>';
             var o=bar.querySelector('#rtOrig');
             if(o) o.onclick=function(){
                 rules.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
-                bar.innerHTML='<span style="color:var(--accent);cursor:pointer" id="rtAgain">'+T('rt_show')+'</span>';
+                bar.innerHTML='<span style="'+btnCss+'" id="rtAgain">'+T('rt_show')+'</span>';
                 var a=bar.querySelector('#rtAgain');
                 if(a) a.onclick=function(){ show(list); };
             };
@@ -2243,7 +2252,7 @@
             if(cached){ show(JSON.parse(cached)); return; }
         }catch(e){}
 
-        bar.innerHTML='<span style="color:var(--accent);cursor:pointer" id="rtGo">'+T('rt_show')+'</span>';
+        bar.innerHTML='<span style="'+btnCss+'" id="rtGo">'+T('rt_show')+'</span>';
         var go=bar.querySelector('#rtGo');
         if(!go) return;
         go.onclick=async function(){
@@ -2266,6 +2275,7 @@
         var box=document.getElementById('rulesBox');if(!box)return;
         var rules=getRules(key);
         if(!rules.length){
+            var oldBar=document.getElementById('rulesTrBar'); if(oldBar) oldBar.remove();
             var ruL=(typeof curLang!=='undefined'&&curLang==='ru');
             box.innerHTML='<div style="color:var(--dim);padding:14px 2px;font-size:14px;line-height:1.55">'+(ruL?'Владелец пока не задал правила этого DAO.':'The owner hasn\'t set any rules for this DAO yet.')+'</div>';
         } else {
