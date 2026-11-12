@@ -2224,36 +2224,44 @@
         return 'en';
     }
 
-    async function tonixOfferRulesTranslation(key, rules, box){
+    async function tonixOfferRulesTranslation(key, rules, box, opts){
+        opts=opts||{};
         var lang=(typeof curLang!=='undefined')?curLang:'en';
         var src=tonixGuessLang(rules.join(' '));
-        var old=document.getElementById('rulesTrBar');
+        var barId=opts.barId||'rulesTrBar';
+        var textSel=opts.textSel||'.rule p';
+        var old=document.getElementById(barId);
         if(old) old.remove();
         if(src===lang) return;                       /* уже на языке интерфейса */
 
         var cacheKey='tonix_rules_tr_'+key+'_'+lang;
         var bar=document.createElement('div');
-        bar.id='rulesTrBar';
-        bar.style.cssText='margin:2px 0 16px;font-size:15px;color:var(--dim);display:flex;'
+        bar.id=barId;
+        bar.style.cssText='margin:2px 0 12px;font-size:15px;color:var(--dim);display:flex;'
             +'align-items:center;gap:12px;flex-wrap:wrap';
         var btnCss='display:inline-flex;align-items:center;padding:10px 16px;border-radius:12px;'
             +'background:rgba(45,131,236,.14);border:1px solid rgba(45,131,236,.5);'
             +'color:var(--accent);font-size:15px;font-weight:650;cursor:pointer;line-height:1.2';
-        var page=document.getElementById('d-rules');
-        var head=page&&page.querySelector('.sec-h');
-        if(head) head.insertAdjacentElement('afterend', bar);
-        else box.insertBefore(bar, box.firstChild);
+        if(opts.barHost) opts.barHost.appendChild(bar);
+        else {
+            var page=document.getElementById('d-rules');
+            var head=page&&page.querySelector('.sec-h');
+            if(head) head.insertAdjacentElement('afterend', bar);
+            else box.insertBefore(bar, box.firstChild);
+        }
 
+        function nodes(){ return box.querySelectorAll(textSel); }
         function show(list){
-            var nodes=box.querySelectorAll('.rule p');
-            list.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
+            var n=nodes();
+            list.forEach(function(t,i){ if(n[i]) n[i].textContent=t; });
             bar.innerHTML='<span data-i18n="rt_machine">'+T('rt_machine')+'</span>'
-                +'<span style="'+btnCss+'" id="rtOrig" data-i18n="rt_orig">'+T('rt_orig')+'</span>';
-            var o=bar.querySelector('#rtOrig');
+                +'<span style="'+btnCss+'" data-i18n="rt_orig">'+T('rt_orig')+'</span>';
+            var o=bar.querySelector('[data-i18n="rt_orig"]');
             if(o) o.onclick=function(){
-                rules.forEach(function(t,i){ if(nodes[i]) nodes[i].textContent=t; });
-                bar.innerHTML='<span style="'+btnCss+'" id="rtAgain" data-i18n="rt_show">'+T('rt_show')+'</span>';
-                var a=bar.querySelector('#rtAgain');
+                var n2=nodes();
+                rules.forEach(function(t,i){ if(n2[i]) n2[i].textContent=t; });
+                bar.innerHTML='<span style="'+btnCss+'" data-i18n="rt_show">'+T('rt_show')+'</span>';
+                var a=bar.querySelector('[data-i18n="rt_show"]');
                 if(a) a.onclick=function(){ show(list); };
             };
         }
@@ -2263,8 +2271,8 @@
             if(cached){ show(JSON.parse(cached)); return; }
         }catch(e){}
 
-        bar.innerHTML='<span style="'+btnCss+'" id="rtGo" data-i18n="rt_show">'+T('rt_show')+'</span>';
-        var go=bar.querySelector('#rtGo');
+        bar.innerHTML='<span style="'+btnCss+'" data-i18n="rt_show">'+T('rt_show')+'</span>';
+        var go=bar.querySelector('[data-i18n="rt_show"]');
         if(!go) return;
         go.onclick=async function(){
             bar.textContent=T('rt_working');
@@ -2857,16 +2865,26 @@
     }
     function joinDao(){
         var rules=getRules(curKey);
-        var rh=rules.map(function(r,i){return '<div class="ar"><span class="rn">'+(i+1)+'</span>'+esc(r)+'</div>';}).join('');
+        var rh=rules.map(function(r,i){return '<div class="ar"><span class="rn">'+(i+1)+'</span><span class="ar-t">'+esc(r)+'</span></div>';}).join('');
         showModal(
             '<span class="mclose" onclick="closeModal()">✕</span>'+
             '<h3>'+T('jn_h')+'</h3>'+
             '<div class="msub">'+T('jn_sub')+'</div>'+
-            '<div class="agree-box">'+rh+'</div>'+
+            '<div id="joinRulesTr"></div>'+
+            '<div class="agree-box" id="joinRulesBox">'+rh+'</div>'+
             '<label class="agree-check"><input type="checkbox" id="agreeChk" onchange="tonixJoinChk()"><span>'+T('jn_agree')+'</span></label>'+
             '<label class="agree-check"><input type="checkbox" id="privChk" onchange="tonixJoinChk()"><span>'+T('jn_priv')+'</span></label>'+
             '<button class="btn btn-main btn-lg" id="joinBtn" style="width:100%;margin-top:8px" disabled onclick="confirmJoin()">'+T('jn_btn')+'</button>'
         );
+        /* Та же кнопка, что на вкладке «Правила»: язык интерфейса, общий кэш. */
+        try{
+            var box=document.getElementById('joinRulesBox');
+            if(box&&rules.length) tonixOfferRulesTranslation(curKey, rules, box, {
+                barHost: document.getElementById('joinRulesTr'),
+                textSel: '.ar-t',
+                barId: 'joinRulesTrBar'
+            });
+        }catch(e){}
     }
     /* Красивая плашка вместо browser-alert: отказ гейта / успешный вход */
     /* Совместимая обёртка: отказ и успешный вход показываем той же сценой */
