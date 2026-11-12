@@ -126,7 +126,7 @@
     .gate-note .gn-shake{animation:gn-shake .5s ease .5s 1}
     .gate-note h3{font-family:var(--serif,serif);font-size:23px;margin:2px 0 8px;color:#eaf2ff;opacity:0;animation:gn-up .45s ease .3s forwards}
     .gate-note p{color:var(--dim,#8aa);font-size:14.5px;line-height:1.55;margin:0 0 20px;opacity:0;animation:gn-up .45s ease .38s forwards}
-    .gate-note .gn-need{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#e0a64f;background:rgba(224,166,79,.1);border:1px solid rgba(224,166,79,.28);padding:8px 14px;border-radius:10px;margin:0 0 18px;opacity:0;animation:gn-up .45s ease .44s forwards}
+    .gate-note .gn-need{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;font-size:13px;font-weight:600;color:#e0a64f;background:rgba(224,166,79,.1);border:1px solid rgba(224,166,79,.28);padding:8px 14px;border-radius:10px;margin:0 0 18px;max-width:100%;white-space:normal;text-align:center;line-height:1.35;opacity:0;animation:gn-up .45s ease .44s forwards}
     .gate-note .gn-btn{opacity:0;animation:gn-up .45s ease .5s forwards}
     @keyframes gn-pop{to{transform:scale(1);opacity:1}}
     @keyframes gn-draw{to{stroke-dashoffset:0}}
@@ -1694,11 +1694,12 @@
         style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit">
       </div>
       <label style="display:block;font-size:12px;color:var(--dim);margin:12px 0 5px" data-i18n="gt_vote_w">Вес голоса</label>
-      <select id="gateVoteTok"
+      <select id="gateVoteTok" onchange="tonixVoteWeightCaption()"
         style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:13px;font-family:inherit">
-        <option value="" data-i18n="gt_vote_1p">1 человек = 1 голос — все равны</option>
-        <option value="TON" data-i18n="gt_vote_ton">По балансу TON — вес голоса равен TON на кошельке</option>
+        <option value="" data-i18n="gt_vote_1p">1 человек = 1 голос</option>
+        <option value="TON" data-i18n="gt_vote_ton">По балансу TON</option>
       </select>
+      <p id="gateVoteFull" style="font-size:13px;color:var(--text);margin:8px 0 0;line-height:1.45"></p>
       <p style="font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.5" data-i18n="gt_vote_note">С токеном вес голоса равен балансу на кошельке. При закрытии голосования вес пересчитывается по текущему балансу — переслать токены и проголосовать дважды не выйдет.</p>
       <label style="display:block;font-size:12px;color:var(--dim);margin:12px 0 5px" data-i18n="gt_prop">Порог на создание предложения, TON</label>
       <input id="gatePropTon" type="number" min="0" step="0.1" placeholder="0"
@@ -1812,16 +1813,16 @@
     I18N.ar=Object.assign(I18N.ar||{},{"role_admin": "مشرف", "mem_remove": "إزالة"});
     I18N.hi=Object.assign(I18N.hi||{},{"role_admin": "एडमिन", "mem_remove": "हटाएं"});
     I18N.ja=Object.assign(I18N.ja||{},{"role_admin": "管理者", "mem_remove": "削除"});
-    I18N.ru=Object.assign(I18N.ru||{},{"gt_vote_1p": "1 человек = 1 голос — все равны", "gt_vote_ton": "По балансу TON — вес голоса равен TON на кошельке"});
-    I18N.en=Object.assign(I18N.en||{},{"gt_vote_1p": "1 person = 1 vote — everyone equal", "gt_vote_ton": "By TON balance — vote weight equals TON in the wallet"});
-    I18N.es=Object.assign(I18N.es||{},{"gt_vote_1p": "1 persona = 1 voto — todos iguales", "gt_vote_ton": "Por saldo de TON — el peso del voto es igual al TON en la billetera"});
-    I18N.pt=Object.assign(I18N.pt||{},{"gt_vote_1p": "1 pessoa = 1 voto — todos iguais", "gt_vote_ton": "Pelo saldo de TON — o peso do voto é igual ao TON na carteira"});
-    I18N.fr=Object.assign(I18N.fr||{},{"gt_vote_1p": "1 personne = 1 voix — tous égaux", "gt_vote_ton": "Par solde TON — le poids du vote égale les TON du portefeuille"});
-    I18N.de=Object.assign(I18N.de||{},{"gt_vote_1p": "1 Person = 1 Stimme — alle gleich", "gt_vote_ton": "Nach TON-Guthaben — Stimmgewicht entspricht TON in der Wallet"});
-    I18N.zh=Object.assign(I18N.zh||{},{"gt_vote_1p": "1 人 = 1 票 — 人人平等", "gt_vote_ton": "按 TON 余额 — 票的权重等于钱包中的 TON"});
-    I18N.ar=Object.assign(I18N.ar||{},{"gt_vote_1p": "شخص واحد = صوت واحد — الجميع سواسية", "gt_vote_ton": "حسب رصيد TON — وزن الصوت يساوي TON في المحفظة"});
-    I18N.hi=Object.assign(I18N.hi||{},{"gt_vote_1p": "1 व्यक्ति = 1 वोट — सब बराबर", "gt_vote_ton": "TON बैलेंस से — वोट का भार वॉलेट में TON के बराबर"});
-    I18N.ja=Object.assign(I18N.ja||{},{"gt_vote_1p": "1人 = 1票 — 全員平等", "gt_vote_ton": "TON 残高で — 票の重みはウォレットの TON と同じ"});
+    I18N.ru=Object.assign(I18N.ru||{},{"gt_vote_1p": "1 человек = 1 голос — все равны", "gt_vote_ton": "По балансу TON"});
+    I18N.en=Object.assign(I18N.en||{},{"gt_vote_1p": "1 person = 1 vote — everyone equal", "gt_vote_ton": "By TON balance"});
+    I18N.es=Object.assign(I18N.es||{},{"gt_vote_1p": "1 persona = 1 voto — todos iguales", "gt_vote_ton": "Por saldo de TON"});
+    I18N.pt=Object.assign(I18N.pt||{},{"gt_vote_1p": "1 pessoa = 1 voto — todos iguais", "gt_vote_ton": "Pelo saldo de TON"});
+    I18N.fr=Object.assign(I18N.fr||{},{"gt_vote_1p": "1 personne = 1 voix — tous égaux", "gt_vote_ton": "Par solde TON"});
+    I18N.de=Object.assign(I18N.de||{},{"gt_vote_1p": "1 Person = 1 Stimme — alle gleich", "gt_vote_ton": "Nach TON-Guthaben"});
+    I18N.zh=Object.assign(I18N.zh||{},{"gt_vote_1p": "1 人 = 1 票 — 人人平等", "gt_vote_ton": "按 TON 余额"});
+    I18N.ar=Object.assign(I18N.ar||{},{"gt_vote_1p": "شخص واحد = صوت واحد — الجميع سواسية", "gt_vote_ton": "حسب رصيد TON"});
+    I18N.hi=Object.assign(I18N.hi||{},{"gt_vote_1p": "1 व्यक्ति = 1 वोट — सब बराबर", "gt_vote_ton": "TON बैलेंस से"});
+    I18N.ja=Object.assign(I18N.ja||{},{"gt_vote_1p": "1人 = 1票 — 全員平等", "gt_vote_ton": "TON 残高で"});
     I18N.ru=Object.assign(I18N.ru||{},{"gt_vote_w": "Вес голоса", "gt_vote_1p": "1 человек = 1 голос", "gt_vote_note": "С токеном вес голоса равен балансу на кошельке. При закрытии голосования вес пересчитывается по текущему балансу — переслать токены и проголосовать дважды не выйдет."});
     I18N.en=Object.assign(I18N.en||{},{"gt_vote_w": "Vote weight", "gt_vote_1p": "1 person = 1 vote", "gt_vote_note": "With a token, vote weight equals the wallet balance. On close the weight is recomputed from the current balance — sending tokens around to vote twice will not work."});
     I18N.es=Object.assign(I18N.es||{},{"gt_vote_w": "Peso del voto", "gt_vote_1p": "1 persona = 1 voto", "gt_vote_note": "Con un token, el peso del voto es igual al saldo. Al cerrar, el peso se recalcula con el saldo actual: enviar tokens para votar dos veces no funciona."});
@@ -1832,6 +1833,16 @@
     I18N.ar=Object.assign(I18N.ar||{},{"gt_vote_w": "وزن الصوت", "gt_vote_1p": "شخص واحد = صوت واحد", "gt_vote_note": "مع الرمز، وزن الصوت يساوي رصيد المحفظة. عند الإغلاق يُعاد حساب الوزن بالرصيد الحالي — إرسال الرموز للتصويت مرتين لن ينجح."});
     I18N.hi=Object.assign(I18N.hi||{},{"gt_vote_w": "वोट का भार", "gt_vote_1p": "1 व्यक्ति = 1 वोट", "gt_vote_note": "टोकन के साथ वोट का भार वॉलेट बैलेंस के बराबर है। समाप्ति पर भार वर्तमान बैलेंस से फिर गिना जाता है — टोकन भेजकर दो बार वोट करना नहीं चलेगा।"});
     I18N.ja=Object.assign(I18N.ja||{},{"gt_vote_w": "投票の重み", "gt_vote_1p": "1人 = 1票", "gt_vote_note": "トークンありでは投票の重みはウォレット残高と同じです。締切時に現在残高で再計算されるため、トークンを送って二重投票することはできません。"});
+    I18N.ru=Object.assign(I18N.ru||{},{"gt_vw_1p": "Один участник — один голос, баланс не учитывается.", "gt_vw_ton": "Вес голоса равен количеству TON на кошельке.", "gt_vw_tok": "Вес голоса равен балансу токена {sym} на кошельке."});
+    I18N.en=Object.assign(I18N.en||{},{"gt_vw_1p": "One member, one vote. Balance does not count.", "gt_vw_ton": "Vote weight equals the TON in the wallet.", "gt_vw_tok": "Vote weight equals the {sym} balance in the wallet."});
+    I18N.es=Object.assign(I18N.es||{},{"gt_vw_1p": "Un miembro, un voto. El saldo no cuenta.", "gt_vw_ton": "El peso del voto es igual al TON de la billetera.", "gt_vw_tok": "El peso del voto es igual al saldo de {sym} en la billetera."});
+    I18N.pt=Object.assign(I18N.pt||{},{"gt_vw_1p": "Um membro, um voto. O saldo não conta.", "gt_vw_ton": "O peso do voto é igual ao TON na carteira.", "gt_vw_tok": "O peso do voto é igual ao saldo de {sym} na carteira."});
+    I18N.fr=Object.assign(I18N.fr||{},{"gt_vw_1p": "Un membre, une voix. Le solde ne compte pas.", "gt_vw_ton": "Le poids du vote égale les TON du portefeuille.", "gt_vw_tok": "Le poids du vote égale le solde de {sym} dans le portefeuille."});
+    I18N.de=Object.assign(I18N.de||{},{"gt_vw_1p": "Ein Mitglied, eine Stimme. Guthaben zählt nicht.", "gt_vw_ton": "Das Stimmgewicht entspricht dem TON in der Wallet.", "gt_vw_tok": "Das Stimmgewicht entspricht dem {sym}-Guthaben in der Wallet."});
+    I18N.zh=Object.assign(I18N.zh||{},{"gt_vw_1p": "一人一票，余额不计入。", "gt_vw_ton": "票的权重等于钱包中的 TON。", "gt_vw_tok": "票的权重等于钱包中的 {sym} 余额。"});
+    I18N.ar=Object.assign(I18N.ar||{},{"gt_vw_1p": "عضو واحد، صوت واحد. الرصيد لا يُحسب.", "gt_vw_ton": "وزن الصوت يساوي كمية TON في المحفظة.", "gt_vw_tok": "وزن الصوت يساوي رصيد {sym} في المحفظة."});
+    I18N.hi=Object.assign(I18N.hi||{},{"gt_vw_1p": "एक सदस्य, एक वोट। बैलेंस नहीं गिना जाता।", "gt_vw_ton": "वोट का भार वॉलेट के TON के बराबर है।", "gt_vw_tok": "वोट का भार वॉलेट में {sym} बैलेंस के बराबर है।"});
+    I18N.ja=Object.assign(I18N.ja||{},{"gt_vw_1p": "一人一票。残高は数えません。", "gt_vw_ton": "票の重みはウォレットの TON と同じです。", "gt_vw_tok": "票の重みはウォレットの {sym} 残高と同じです。"});
     I18N.ru=Object.assign(I18N.ru||{},{"gt_fee_cur": "Чем платят взнос", "gt_fee2": "Размер взноса", "gt_fee_tok_note": "В списке — токены, которые уже есть в казне DAO. Чтобы взнос принимался в своём токене, сначала переведи немного этого токена в мультисиг."});
     I18N.en=Object.assign(I18N.en||{},{"gt_fee_cur": "Fee currency", "gt_fee2": "Fee amount", "gt_fee_tok_note": "The list shows tokens already held by the DAO treasury. To accept the fee in your token, first send a little of it to the multisig."});
     I18N.es=Object.assign(I18N.es||{},{"gt_fee_cur": "Moneda de la cuota", "gt_fee2": "Importe de la cuota", "gt_fee_tok_note": "La lista muestra tokens que ya están en la tesorería. Para aceptar la cuota en tu token, envía antes un poco al multisig."});
@@ -2307,6 +2318,21 @@
         try{var A=window.TonCore.Address;return A.parse(String(a).trim()).equals(A.parse(String(b).trim()));}
         catch(e){return String(a).trim()===String(b).trim();}
     }
+    /* Один ключ для EQ…, UQ… и 0:… одного контракта — иначе токен
+       казны, сохранённый адрес и вставленный вручную плодят три пункта. */
+    function tonixAddrKey(a){
+        a=String(a||'').trim();
+        if(!a) return '';
+        if(a.toUpperCase()==='TON') return 'TON';
+        try{
+            var A=window.TonCore&&window.TonCore.Address;
+            if(A) return A.parse(a).toRawString().toLowerCase();
+        }catch(e){}
+        return a.toLowerCase();
+    }
+    var _tonixFillGen={};
+    function tonixFillBegin(id){ _tonixFillGen[id]=(_tonixFillGen[id]||0)+1; return _tonixFillGen[id]; }
+    function tonixFillStale(id, gen){ return _tonixFillGen[id]!==gen; }
     function tonixIsTonAddr(a){
         a=(typeof a==='string')?a.trim():'';
         /* user-friendly (EQ…/UQ…, 48 символов base64url) ИЛИ raw (0:<64 hex> / -1:<64 hex>) */
@@ -3993,11 +4019,11 @@
         var ruS=(typeof curLang==='undefined'||curLang==='ru');
         var seen={};
         Array.prototype.slice.call(sel.options).forEach(function(o){
-            seen[String(o.value).toLowerCase()]=true;
+            seen[tonixAddrKey(o.value)]=true;
         });
         var addOne=function(addr,sym,dec){
-            var k=String(addr).toLowerCase();
-            if(seen[k])return; seen[k]=true;
+            var k=tonixAddrKey(addr);
+            if(!k || seen[k]) return; seen[k]=true;
             var o=document.createElement('option');
             o.value=addr; o.className='dynTok';
             o.textContent=sym+(ruS?' — показывать баланс в '+sym:' — show balance in '+sym);
@@ -4006,17 +4032,17 @@
             sel.appendChild(o);
         };
         fetched.forEach(function(t){ addOne(t.addr,t.sym,t.dec); });
-        if(savedJetton && !seen[String(savedJetton).toLowerCase()]){
+        if(savedJetton && !seen[tonixAddrKey(savedJetton)]){
             addOne(savedJetton, '?', 9);
         }
         var manual=((document.getElementById('gateJetton')||{}).value||'').trim();
-        if(manual && manual!=='TON' && !seen[manual.toLowerCase()]){
+        if(manual && manual!=='TON' && !seen[tonixAddrKey(manual)]){
             var meta=await tonixJettonMeta(manual, cfg.testnet);
             if(meta){ addOne(manual, meta.sym, meta.dec); }
         }
-        var wantVal=(savedJetton!=null?savedJetton:'')||'';
+        var wantKey=tonixAddrKey(savedJetton||'');
         for(var i=0;i<sel.options.length;i++){
-            if(String(sel.options[i].value).toLowerCase()===String(wantVal).toLowerCase()){
+            if(tonixAddrKey(sel.options[i].value)===wantKey){
                 sel.selectedIndex=i; break;
             }
         }
@@ -4062,18 +4088,16 @@
 
     async function tonixFillTokSelect(selId, key, savedJetton, savedSymbol, savedDec){
         var sel=document.getElementById(selId); if(!sel)return;
+        var gen=tonixFillBegin(selId);
 
-        /* Сначала данные, потом одна перерисовка. Раньше список чистился
-           до запроса, и две параллельные загрузки (открытие DAO зовёт
-           настройки из двух мест) добавляли токен дважды. Заодно чистка
-           сносила статичные пункты вроде «По балансу TON». Теперь динамика
-           помечена, статичные пункты неприкосновенны, а перерисовка
-           атомарна — победит последний запрос, дублей не будет. */
+        /* Сначала данные, потом одна перерисовка. Параллельные загрузки
+           больше не дописывают список: пишет только последний вызов.
+           Один и тот же контракт в виде EQ…, UQ… и 0:… — это один пункт. */
         var fetched=[];
         var tre=tonixDaoTreasuryAddr(key);
+        var cfg=(TONIX_CONFIG.daoTreasury||{})[key]||{};
         if(tre){
             try{
-                var cfg=(TONIX_CONFIG.daoTreasury||{})[key]||{};
                 var base=cfg.testnet?'https://testnet.tonapi.io':'https://tonapi.io';
                 var j=await tonixTonapi(base+'/v2/accounts/'+encodeURIComponent(tre)+'/jettons');
                 ((j&&j.balances)||[]).filter(function(b){return Number(b.balance)>0;})
@@ -4084,54 +4108,61 @@
                     });
             }catch(e){}
         }
+        if(tonixFillStale(selId, gen)) return;
 
-        var keep=sel.value; /* текущий выбор переживает перерисовку */
+        var manual=((document.getElementById('gateJetton')||{}).value||'').trim();
+        var manualMeta=null;
+        if(manual && manual!=='TON'){
+            manualMeta=await tonixJettonMeta(manual, cfg.testnet);
+        }
+        if(tonixFillStale(selId, gen)) return;
 
-        /* Убираем только динамические пункты */
+        var keep=sel.value;
         Array.prototype.slice.call(sel.querySelectorAll('option.dynTok'))
             .forEach(function(o){ o.remove(); });
 
         var ruS=(typeof curLang==='undefined'||curLang==='ru');
         var seen={};
         Array.prototype.slice.call(sel.options).forEach(function(o){
-            seen[String(o.value).toLowerCase()]=true;
+            seen[tonixAddrKey(o.value)]=true;
         });
-        var addOne=function(addr,sym,dec,saved){
-            var k=String(addr).toLowerCase();
-            if(seen[k])return; seen[k]=true;
+        var addOne=function(addr,sym,dec){
+            var k=tonixAddrKey(addr);
+            if(!k || seen[k]) return; seen[k]=true;
             var o=document.createElement('option');
             o.value=addr;
             o.className='dynTok';
-            o.textContent=(ruS?'По токену ':'By token ')+sym+
-                (ruS?' — вес голоса равен балансу токена':' — vote weight equals token balance')+
-                (saved?' (saved)':'');
+            o.textContent=(ruS?'По токену ':'Token ')+sym;
             o.setAttribute('data-sym',sym);
             o.setAttribute('data-dec',String(dec));
             sel.appendChild(o);
         };
-        fetched.forEach(function(t){ addOne(t.addr,t.sym,t.dec,false); });
-        /* Сохранённый токен не слетает, даже если казна промолчала */
+        fetched.forEach(function(t){ addOne(t.addr,t.sym,t.dec); });
         if(savedJetton && savedJetton!=='TON'){
-            addOne(savedJetton, savedSymbol||'?', (savedDec!=null)?savedDec:9, true);
+            addOne(savedJetton, savedSymbol||((manualMeta&&tonixAddrKey(manual)===tonixAddrKey(savedJetton))?manualMeta.sym:'?'), (savedDec!=null)?savedDec:9);
         }
+        if(manual && manual!=='TON' && manualMeta) addOne(manual, manualMeta.sym, manualMeta.dec);
 
-        /* Токен, введённый вручную в поле «Адрес токена сообщества»:
-           если его ещё нет в списке — узнаём символ и точность у tonapi
-           и добавляем. Так им можно взвешивать голоса, даже если он не
-           лежит в казне DAO. */
-        var manual=((document.getElementById('gateJetton')||{}).value||'').trim();
-        if(manual && manual!=='TON' && !seen[manual.toLowerCase()]){
-            var cfgM=(TONIX_CONFIG.daoTreasury||{})[key]||{};
-            var meta=await tonixJettonMeta(manual, cfgM.testnet);
-            if(meta){ addOne(manual, meta.sym, meta.dec, false); }
-        }
-
-        var wantVal=savedJetton||keep||'';
-        for(var i=0;i<sel.options.length;i++){
-            if(String(sel.options[i].value).toLowerCase()===String(wantVal).toLowerCase()){
-                sel.selectedIndex=i; break;
+        var want=tonixAddrKey(savedJetton||keep||'');
+        if(want){
+            for(var i=0;i<sel.options.length;i++){
+                if(tonixAddrKey(sel.options[i].value)===want){ sel.selectedIndex=i; break; }
             }
         }
+        tonixVoteWeightCaption();
+    }
+
+    /* Полная фраза под списком: в самом списке она не влезала в панель. */
+    function tonixVoteWeightCaption(){
+        var sel=document.getElementById('gateVoteTok');
+        var el=document.getElementById('gateVoteFull');
+        if(!sel||!el) return;
+        var v=sel.value;
+        var o=sel.options[sel.selectedIndex];
+        var sym=o?(o.getAttribute('data-sym')||''):'';
+        if(v==='TON') el.textContent=T('gt_vw_ton');
+        else if(v) el.textContent=T('gt_vw_tok').replace('{sym}', sym||'?');
+        else el.textContent=T('gt_vw_1p');
     }
 
     /* Подпись поля суммы следует за выбранным токеном: «Размер взноса, TON»
@@ -4175,11 +4206,11 @@
 
         var seen={};
         Array.prototype.slice.call(sel.options).forEach(function(o){
-            seen[String(o.value).toLowerCase()]=true;
+            seen[tonixAddrKey(o.value)]=true;
         });
         var addOne=function(addr,sym,name,dec,saved){
-            var k=String(addr).toLowerCase();
-            if(seen[k])return; seen[k]=true;
+            var k=tonixAddrKey(addr);
+            if(!k || seen[k]) return; seen[k]=true;
             var o=document.createElement('option');
             o.value=addr;
             o.className='dynTok';
@@ -4197,15 +4228,15 @@
            платить взнос, даже если его пока нет в казне. Символ и точность
            берём у tonapi по адресу. */
         var manualF=((document.getElementById('gateJetton')||{}).value||'').trim();
-        if(manualF && manualF!=='TON' && !seen[manualF.toLowerCase()]){
+        if(manualF && manualF!=='TON' && !seen[tonixAddrKey(manualF)]){
             var cfgMF=(TONIX_CONFIG.daoTreasury||{})[key]||{};
             var metaF=await tonixJettonMeta(manualF, cfgMF.testnet);
             if(metaF){ addOne(manualF, metaF.sym, '', metaF.dec, false); }
         }
 
-        var wantVal=savedJetton||keep||'';
+        var wantKeyF=tonixAddrKey(savedJetton||keep||'');
         for(var i=0;i<sel.options.length;i++){
-            if(String(sel.options[i].value).toLowerCase()===String(wantVal).toLowerCase()){
+            if(tonixAddrKey(sel.options[i].value)===wantKeyF){
                 sel.selectedIndex=i; break;
             }
         }
@@ -4227,6 +4258,33 @@
            сервер завернёт человека по порогу раньше, чем дойдёт до оплаты. */
         var hold=document.getElementById('gateHoldBox');
         if(hold) hold.style.display=(sel.value==='hold')?'block':'none';
+    }
+
+    /* Символ актива для плашки «Нужно 100 JETTON», а не голое «Нужно 100».
+       Берём то, что прислал сервер, иначе токен входа этого DAO. */
+    async function tonixGateAssetName(daoKey, gj){
+        var sym = gj && (gj.symbol || gj.token_symbol || gj.jetton_symbol);
+        if(sym) return String(sym).replace(/[<>]/g,'').slice(0,20);
+        var addr = gj && (gj.jetton || gj.gate_jetton);
+        var min = null, thr = null;
+        try{
+            var r = await sb.from('dao_settings').select('gate_jetton,gate_min,entry_threshold_ton').eq('dao_key', daoKey).limit(1);
+            var s = r && r.data && r.data[0];
+            if(s){
+                if(!addr) addr = s.gate_jetton;
+                min = Number(s.gate_min);
+                thr = Number(s.entry_threshold_ton);
+            }
+        }catch(e){}
+        if(addr && String(addr).toUpperCase()!=='TON'){
+            try{
+                var cfg = (TONIX_CONFIG.daoTreasury||{})[daoKey]||{};
+                var meta = await tonixJettonMeta(addr, !!cfg.testnet);
+                if(meta && meta.sym) return meta.sym;
+            }catch(e){}
+        }
+        if(gj && thr>0 && Number(gj.required)===thr && !(min>0)) return 'TON';
+        return '';
     }
 
     function tonixJoinChk(){var a=document.getElementById('agreeChk'),p=document.getElementById('privChk'),b=document.getElementById('joinBtn');if(b)b.disabled=!(a&&a.checked&&p&&p.checked);}
@@ -4258,13 +4316,20 @@
                     var gj=await gr.json();
                     if(gj&&gj.allowed===false){
                         var ruG=(typeof curLang==='undefined'||curLang==='ru');
+                        var symG=await tonixGateAssetName(gk, gj);
+                        var unit=symG?(' '+symG):'';
                         var needTxt='';
                         if(gj.required!=null&&gj.held!=null){
-                            needTxt=(ruG?'Нужно ':'Required ')+gj.required+(ruG?' · у тебя ':' · you have ')+gj.held;
+                            needTxt=(ruG?'Нужно ':'Required ')+gj.required+unit+(ruG?' · у тебя ':' · you have ')+gj.held+unit;
                         }
+                        var who=symG||'';
                         tonixGateNotice('deny',{
                             title:ruG?'Доступ закрыт':'Access denied',
-                            text:ruG?'Это DAO открыто только для держателей токена. Пополни баланс нужным токеном и попробуй снова.':'This DAO is open to token holders only. Top up the required token and try again.',
+                            text:who
+                                ?(ruG?('Это DAO открыто только для держателей '+who+'. Пополни баланс и попробуй снова.')
+                                     :('This DAO is open to '+who+' holders only. Top up and try again.'))
+                                :(ruG?'Это DAO открыто только для держателей токена. Пополни баланс нужным токеном и попробуй снова.'
+                                     :'This DAO is open to token holders only. Top up the required token and try again.'),
                             need:needTxt
                         });
                         if(btn){btn.disabled=false;btn.textContent=T('jn_btn');}
