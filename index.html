@@ -704,6 +704,11 @@
       color:#E0A64F;background:rgba(224,166,79,.1);border:1px solid rgba(224,166,79,.28);
       padding:7px 13px;border-radius:10px;margin:0 0 16px}
     .tsc-ov .tsc-btns{display:flex;flex-direction:column;gap:9px}
+    /* Профиль: карточка выше экрана. В Telegram клавиатура не уменьшает
+       position:fixed, и поле ника уезжает вверх. Держим лист в видимой
+       области и прокручиваем его внутри себя. */
+    .tsc-ov.tsc-form{align-items:flex-start;justify-content:center;overflow:hidden;padding:8px 0}
+    .tsc-ov.tsc-form .tsc-card{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
     @media(max-width:520px){
       .tsc-ov .tsc-stage{height:230px}
       .tsc-ov .tsc-stage svg{width:210px;height:210px}
@@ -3156,7 +3161,7 @@
         var p=window._tonixProfiles[currentUID]||{};
         var addrNick=tonixWalletNick();
         var ov=document.createElement('div');
-        ov.className='tsc-ov';
+        ov.className='tsc-ov tsc-form';
         ov.innerHTML='<div class="tsc-back"></div><div class="tsc-card" style="text-align:left;padding:24px">'
           +'<h2 style="text-align:center;margin:2px 0 6px">'+T(first?'pf_first':'pf_my')+'</h2>'
           +'<p style="text-align:center;margin:0 0 18px">'
@@ -3197,6 +3202,42 @@
           +'</div></div>';
         document.body.appendChild(ov);
         requestAnimationFrame(function(){ ov.classList.add('show'); });
+
+        /* Клавиатура Telegram сдвигает видимую область, а не сам лист.
+           Привязываем лист к ней и поднимаем то поле, в которое печатают. */
+        function fitSheet(){
+            var vvNow=window.visualViewport;
+            var top=0, height=window.innerHeight||0;
+            if(vvNow){
+                top=vvNow.offsetTop||0;
+                if(vvNow.height) height=vvNow.height;
+            }
+            var tgNow=window.Telegram&&window.Telegram.WebApp;
+            if(tgNow&&tgNow.viewportHeight){
+                var th=Number(tgNow.viewportHeight);
+                if(th>0&&th<height) height=th;
+            }
+            if(!top&&window.scrollY>0) top=window.scrollY;
+            ov.style.top=top+'px';
+            ov.style.height=Math.max(240,Math.round(height))+'px';
+            ov.style.bottom='auto';
+        }
+        function liftField(inp){
+            var card=ov.querySelector('.tsc-card');
+            if(!card||!inp) return;
+            var delta=inp.getBoundingClientRect().top-card.getBoundingClientRect().top-36;
+            card.scrollTop+=delta;
+        }
+        function onPfFocus(e){
+            setTimeout(function(){ fitSheet(); liftField(e.target); }, 280);
+        }
+        var vv=window.visualViewport;
+        var tgApp=window.Telegram&&window.Telegram.WebApp;
+        fitSheet();
+        if(vv){ vv.addEventListener('resize', fitSheet); vv.addEventListener('scroll', fitSheet); }
+        if(tgApp&&tgApp.onEvent) tgApp.onEvent('viewportChanged', fitSheet);
+        ov.querySelector('#pfNick').addEventListener('focus', onPfFocus);
+        ov.querySelector('#pfContact').addEventListener('focus', onPfFocus);
 
         var pendingBlob=null;
         /* Статус Telegram: понятной строкой, а не только в консоли.
@@ -3269,7 +3310,12 @@
                 };
             });
         })();
-        function close(){ ov.classList.remove('show'); setTimeout(function(){ if(ov.parentNode)ov.parentNode.removeChild(ov); },320); }
+        function close(){
+            ov.classList.remove('show');
+            if(vv){ vv.removeEventListener('resize', fitSheet); vv.removeEventListener('scroll', fitSheet); }
+            if(tgApp&&tgApp.offEvent) tgApp.offEvent('viewportChanged', fitSheet);
+            setTimeout(function(){ if(ov.parentNode)ov.parentNode.removeChild(ov); },320);
+        }
         function err(t){ var e=ov.querySelector('#pfErr'); e.textContent=t; e.style.display=t?'block':'none'; }
 
         ov.querySelector('#pfPick').onclick=function(){ ov.querySelector('#pfFile').click(); };
