@@ -5871,8 +5871,9 @@
        браузер прокручивает мимо строки ввода. Подгоняем высоту чата
        под видимую область, чтобы поле осталось сразу над клавиатурой. */
     function tonixFitChat(open){
-        var chat=document.querySelector('.dao-body.chatmode .chat')||document.querySelector('#d-chat .chat');
-        if(!chat) return;
+        var chat=document.querySelector('#d-chat .chat');
+        var inp=document.getElementById('chatInp');
+        if(!chat||!inp) return;
         if(!open){
             chat.style.height='';
             chat.style.minHeight='';
@@ -5886,16 +5887,16 @@
             var th=Number(tg.viewportHeight);
             if(th>0&&th<vH) vH=th;
         }
-        var top=chat.getBoundingClientRect().top;
-        if(top<8){
-            window.scrollBy(0, top-8);
-            top=chat.getBoundingClientRect().top;
-        }
-        var avail=Math.round(vH-top-8);
-        if(avail<240) avail=240;
+        /* Высота чата — почти весь видимый экран, сверху остаётся полоска вкладок.
+           Прокручиваем не к шапке DAO, а так, чтобы строка ввода села на клавиатуру. */
+        var avail=Math.round(vH-56);
+        if(avail<220) avail=Math.max(180, Math.round(vH-12));
         chat.style.minHeight='0px';
         chat.style.height=avail+'px';
         chat.style.maxHeight=avail+'px';
+        var row=inp.closest('.chat-input')||inp;
+        var delta=row.getBoundingClientRect().bottom-(vH-6);
+        if(Math.abs(delta)>1) window.scrollBy(0, delta);
     }
     (function(){
         var inp=document.getElementById('chatInp');
@@ -5904,7 +5905,8 @@
         function openFit(){
             clearTimeout(tmr);
             tonixFitChat(true);
-            tmr=setTimeout(function(){ tonixFitChat(true); }, 320);
+            tmr=setTimeout(function(){ tonixFitChat(true); }, 80);
+            tmr=setTimeout(function(){ tonixFitChat(true); }, 420);
         }
         function maybeClose(){
             setTimeout(function(){
