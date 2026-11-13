@@ -516,8 +516,12 @@
     .member-gate h3{font-size:20px;margin-bottom:8px}
     .member-gate p{color:var(--dim);font-size:14px;max-width:400px;margin:0 auto 24px;line-height:1.6}
     .tlock{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round;vertical-align:-1px;margin-left:4px;opacity:.55;display:none}
+    .chat-head,.chat-input,.ci-prev,.ci-edit{flex-shrink:0}
     /* полноэкранный чат */
     .dao-body.chatmode .chat{height:calc(100vh - 290px);min-height:540px}
+    @media(max-width:760px){
+      .dao-body.chatmode .chat{min-height:0;height:calc(100svh - 168px)}
+    }
     /* ИНТЕРФЕЙСЫ DAO: меню слева */
     .dao-side{display:none}
     #s-dao.iface-sidebar .dao-cols{display:grid;grid-template-columns:230px 1fr;gap:24px;align-items:start}
@@ -5862,6 +5866,64 @@
     document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(function(el){revObs.observe(el);});
     var cntObs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){animateCount(e.target);cntObs.unobserve(e.target);}})},{threshold:.5});
     document.querySelectorAll('[data-count]').forEach(function(el){cntObs.observe(el);});
+
+    /* Чат в Telegram: 100vh и min-height не сжимаются с клавиатурой,
+       браузер прокручивает мимо строки ввода. Подгоняем высоту чата
+       под видимую область, чтобы поле осталось сразу над клавиатурой. */
+    function tonixFitChat(open){
+        var chat=document.querySelector('.dao-body.chatmode .chat')||document.querySelector('#d-chat .chat');
+        if(!chat) return;
+        if(!open){
+            chat.style.height='';
+            chat.style.minHeight='';
+            chat.style.maxHeight='';
+            return;
+        }
+        var vv=window.visualViewport;
+        var vH=(vv&&vv.height)?vv.height:(window.innerHeight||0);
+        var tg=window.Telegram&&window.Telegram.WebApp;
+        if(tg&&Number(tg.viewportHeight)>0){
+            var th=Number(tg.viewportHeight);
+            if(th>0&&th<vH) vH=th;
+        }
+        var top=chat.getBoundingClientRect().top;
+        if(top<8){
+            window.scrollBy(0, top-8);
+            top=chat.getBoundingClientRect().top;
+        }
+        var avail=Math.round(vH-top-8);
+        if(avail<240) avail=240;
+        chat.style.minHeight='0px';
+        chat.style.height=avail+'px';
+        chat.style.maxHeight=avail+'px';
+    }
+    (function(){
+        var inp=document.getElementById('chatInp');
+        if(!inp) return;
+        var tmr=null;
+        function openFit(){
+            clearTimeout(tmr);
+            tonixFitChat(true);
+            tmr=setTimeout(function(){ tonixFitChat(true); }, 320);
+        }
+        function maybeClose(){
+            setTimeout(function(){
+                var row=document.querySelector('#d-chat .chat-input');
+                if(row&&row.contains(document.activeElement)) return;
+                tonixFitChat(false);
+            }, 180);
+        }
+        inp.addEventListener('focus', openFit);
+        inp.addEventListener('blur', maybeClose);
+        var vv=window.visualViewport;
+        if(vv) vv.addEventListener('resize', function(){
+            if(document.activeElement===inp) tonixFitChat(true);
+        });
+        var tg=window.Telegram&&window.Telegram.WebApp;
+        if(tg&&tg.onEvent) tg.onEvent('viewportChanged', function(){
+            if(document.activeElement===inp) tonixFitChat(true);
+        });
+    })();
 
     /* переводы новых вкладок/секций (ru/en) */
     Object.assign(I18N.ru,{nav_home:"Главная",sec_tab:"Security",trend_l:"В тренде на сети TON",lead_h2:"Лидеры — лучшие DAO",lead_lead2:"Самые активные сообщества на сети TON.",all_h:"Все DAO на TON",all_lead:"Будь первым на платформе — создай своё DAO и собери вокруг него сообщество."});
