@@ -370,6 +370,10 @@
     .modal .msub{color:var(--dim);font-size:14px;margin-bottom:22px}
     .modal .mclose{float:right;cursor:pointer;color:var(--dim);width:30px;height:30px;display:grid;place-items:center;border-radius:8px;margin:-8px -8px 0 0}
     .modal .mclose:hover{background:var(--surface2);color:var(--text)}
+    .ava-view{position:fixed;inset:0;z-index:90;background:rgba(5,7,12,.9);display:flex;align-items:center;justify-content:center;padding:24px}
+    .ava-view[hidden]{display:none!important}
+    .ava-view img{max-width:min(92vw,760px);max-height:86vh;width:auto;height:auto;object-fit:contain;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.5);background:#0c1018}
+    .ava-x{position:absolute;top:16px;right:16px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.4);color:#fff;font-size:26px;line-height:1;cursor:pointer}
     .wallet-opt{display:flex;align-items:center;gap:13px;padding:14px;border:1px solid var(--border2);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:.15s}
     .wallet-opt:hover{border-color:var(--accent);background:var(--surface2)}
     .wallet-opt .wi{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#fff;font-size:15px;flex-shrink:0}
@@ -1767,6 +1771,7 @@
 
 <!-- МОДАЛКА -->
 <div class="modal-ov" id="modalOv" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalBox"></div></div>
+<div class="ava-view" id="avaView" hidden onclick="if(event.target===this)tonixCloseAvatar()"><button type="button" class="ava-x" onclick="tonixCloseAvatar()" aria-label="Закрыть">×</button><img id="avaViewImg" alt=""></div>
 
 <script>
     var root=document.documentElement;
@@ -2024,7 +2029,7 @@
     }
     function T(k){var d=I18N[curLang]||I18N.en||I18N.ru;return d[k]!=null?d[k]:((I18N.en&&I18N.en[k]!=null)?I18N.en[k]:(I18N.ru[k]!=null?I18N.ru[k]:k));}
     function showModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOv').classList.add('open');}
-    function closeModal(){document.getElementById('modalOv').classList.remove('open');}
+    function closeModal(){document.getElementById('modalOv').classList.remove('open');if(window.tonixCloseAvatar)window.tonixCloseAvatar();}
     /* Настоящий вход: TON Connect (кошельки Tonkeeper/MyTonWallet/Telegram Wallet) */
     async function openLogin(){
         try{
@@ -3563,8 +3568,16 @@
         var isAdmin=!!((window._tonixAdminSet||{})[uid]);
         var role=isOwner?(ru?'Владелец':'Owner'):(isAdmin?(ru?'Админ':'Admin'):(ru?'Участник':'Member'));
 
+        var ava=tonixAvatarHtml(uid,name,54);
+        var photo=(prof&&prof.avatar_url)||'';
+        if(photo){
+            ava='<button type="button" data-src="'+tonixEsc(photo)+'" onclick="tonixViewAvatar(this.getAttribute(\'data-src\'))" '
+                +'title="'+(ru?'Открыть фото':'View photo')+'" aria-label="'+(ru?'Открыть фото':'View photo')+'" '
+                +'style="padding:0;border:0;background:none;cursor:zoom-in;border-radius:50%;line-height:0">'
+                +ava+'</button>';
+        }
         var body='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
-            +tonixAvatarHtml(uid,name,54)
+            +ava
             +'<div style="text-align:left"><div style="font-weight:700;font-size:17px">'+tonixEsc(name)+'</div>'
             +'<div style="font-size:12px;color:var(--dim);margin-top:2px">'+tonixEsc(role)+'</div></div></div>';
 
@@ -3611,6 +3624,24 @@
         showModal('<h3 style="font-family:var(--serif);font-size:20px;margin:0 0 16px">'+(ru?'Профиль участника':'Member profile')+'</h3>'+body+
             '<button class="btn btn-ghost" style="width:100%;margin-top:14px" onclick="closeModal()">'+(ru?'Закрыть':'Close')+'</button>');
     }
+    window.tonixViewAvatar=function(src){
+        if(!src)return;
+        var box=document.getElementById('avaView');
+        var img=document.getElementById('avaViewImg');
+        if(!box||!img)return;
+        img.src=src;
+        box.hidden=false;
+    };
+    window.tonixCloseAvatar=function(){
+        var box=document.getElementById('avaView');
+        var img=document.getElementById('avaViewImg');
+        if(box)box.hidden=true;
+        if(img)img.removeAttribute('src');
+    };
+    document.addEventListener('keydown',function(e){
+        var box=document.getElementById('avaView');
+        if(e.key==='Escape'&&box&&!box.hidden){e.preventDefault();window.tonixCloseAvatar();}
+    });
     window._tonixMemberOwnerUid=null;
 
     /* Создать голосование об исключении участника. Причина обязательна:
