@@ -48,6 +48,39 @@
                (ru() ? "не проверено" : "not verified") + "</span>";
     }
 
+    function isPinnedSlug(slug) {
+        return slug === "jetton-dao-wv3y" || slug === "jetton-dao";
+    }
+    function isPinnedRow(row) {
+        var name = String((row && row.name) || "").toLowerCase().trim();
+        return isPinnedSlug(row && row.slug) || name === "jetton" || name === "jetton dao";
+    }
+    function markPinned(card) {
+        if (!card) return;
+        card.classList.add("dao-pinned");
+        if (!card.querySelector(".pin-badge")) {
+            var name = card.querySelector(".dc-name");
+            if (name) name.insertAdjacentHTML("beforeend",
+                '<span class="pin-badge">' + (ru() ? "закреплено" : "pinned") + "</span>");
+        }
+    }
+    /* Jetton остаётся первой, сколько бы новых DAO ни появилось. */
+    function pinJetton() {
+        var grid = document.getElementById("daoGrid");
+        if (!grid) return;
+        var cards = grid.querySelectorAll(".dao-card");
+        var keep = [];
+        for (var i = 0; i < cards.length; i++) {
+            var oc = cards[i].getAttribute("onclick") || "";
+            var nm = (cards[i].getAttribute("data-name") || "");
+            if (oc.indexOf("jetton-dao") >= 0 || nm === "jetton" || nm === "jetton dao") keep.push(cards[i]);
+        }
+        for (var j = keep.length - 1; j >= 0; j--) {
+            markPinned(keep[j]);
+            grid.insertBefore(keep[j], grid.firstChild);
+        }
+    }
+
     /* Собираем карточку каталога из строки базы */
     function buildCard(row, isOwner) {
         var slug = row.slug;
@@ -114,7 +147,17 @@
         /* Рисуем карточку только если её ещё нет (хардкод/демо не трогаем) */
         if (!cardExists(slug)) {
             var grid = document.getElementById("daoGrid");
-            if (grid) grid.insertBefore(buildCard(row, isOwner), grid.firstChild);
+            if (grid) {
+                var card = buildCard(row, isOwner);
+                if (isPinnedRow(row)) {
+                    markPinned(card);
+                    grid.insertBefore(card, grid.firstChild);
+                } else {
+                    var pins = grid.querySelectorAll(".dao-card.dao-pinned");
+                    var after = pins.length ? pins[pins.length - 1].nextSibling : grid.firstChild;
+                    grid.insertBefore(card, after);
+                }
+            }
         } else if (row.avatar_url) {
             /* Карточка уже нарисована — обновляем логотип на месте.
                Иначе аватар, загруженный позже, никогда бы не появился в каталоге. */
@@ -166,6 +209,7 @@
                             if (ava[rows[i].slug]) rows[i].avatar_url = ava[rows[i].slug];
                             applyRow(rows[i]);
                         }
+                        pinJetton();
                         if (typeof filterDaos === "function" && document.getElementById("daoGrid")) filterDaos();
                         loadMemberCounts();
                         openDaoFromUrl();
@@ -173,6 +217,7 @@
                     .catch(function () {
                         /* Без аватаров каталог всё равно должен открыться */
                         for (var i = 0; i < rows.length; i++) applyRow(rows[i]);
+                        pinJetton();
                         if (typeof filterDaos === "function" && document.getElementById("daoGrid")) filterDaos();
                         openDaoFromUrl();
                     });

@@ -165,6 +165,8 @@
     .sec-title h2{font-size:23px}.sec-title .cnt{font-size:13px;color:var(--dim)}
     .dao-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:60px}
     .dao-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:20px;cursor:pointer;transition:.18s}
+    .dao-card.dao-pinned{border-color:color-mix(in srgb,var(--accent) 50%,var(--border))}
+    .pin-badge{font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);border-radius:999px;padding:1px 8px;white-space:nowrap}
     .dao-card:hover{border-color:var(--accent);transform:translateY(-3px)}
     .dc-top{display:flex;align-items:center;gap:13px;margin-bottom:13px}
     .dc-logo{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:18px;color:#fff;flex-shrink:0}
@@ -979,7 +981,7 @@
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20261027-1"></script>
 <script src="js/treasury-tx.js?v=20261018-1"></script>
-<script src="js/daos-loader.js?v=20261111-1"></script>
+<script src="js/daos-loader.js?v=20261121-pin"></script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
 <script src="js/ton-core.bundle.js?v=20260719-11"></script>
 <script src="js/multisig-deploy.js?v=20261009-2"></script>
