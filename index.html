@@ -981,7 +981,50 @@
 <script src="js/landing-tech.js?v=20260722-5"></script>
 <script src="js/payout-signals.js?v=20261027-1"></script>
 <script src="js/treasury-tx.js?v=20261018-1"></script>
-<script src="js/daos-loader.js?v=20261121-pin"></script>
+<script src="js/daos-loader.js?v=20261121-pin2"></script>
+<script>
+/* Закреп JETTON DAO в каталоге. Лежит в странице, а не в js-файле:
+   Cloudflare долго отдаёт старые скрипты, а страницу — сразу. */
+(function () {
+    var busy = false;
+    function pin() {
+        if (busy) return;
+        var grid = document.getElementById("daoGrid");
+        if (!grid) return;
+        var cards = grid.querySelectorAll(".dao-card");
+        var keep = [];
+        for (var i = 0; i < cards.length; i++) {
+            var oc = cards[i].getAttribute("onclick") || "";
+            var nm = cards[i].getAttribute("data-name") || "";
+            if (oc.indexOf("'jetton-dao") >= 0 || nm === "jetton dao" || nm === "jetton") keep.push(cards[i]);
+        }
+        if (!keep.length) return;
+        busy = true;
+        var label = (typeof curLang !== "undefined" && curLang !== "ru") ? "pinned" : "закреплено";
+        for (var j = keep.length - 1; j >= 0; j--) {
+            var card = keep[j];
+            card.classList.add("dao-pinned");
+            var badge = card.querySelector(".pin-badge");
+            if (!badge) {
+                var name = card.querySelector(".dc-name");
+                if (name) name.insertAdjacentHTML("beforeend", '<span class="pin-badge">' + label + "</span>");
+            }
+            if (grid.firstElementChild !== card) grid.insertBefore(card, grid.firstElementChild);
+        }
+        busy = false;
+    }
+    var ticks = 0;
+    var timer = setInterval(function () {
+        pin();
+        if (++ticks > 30) clearInterval(timer);
+    }, 400);
+    document.addEventListener("DOMContentLoaded", function () {
+        var grid = document.getElementById("daoGrid");
+        if (!grid || !window.MutationObserver) return;
+        new MutationObserver(pin).observe(grid, { childList: true });
+    });
+})();
+</script>
 <script src="js/dao-admin.js?v=20260719-11"></script>
 <script src="js/ton-core.bundle.js?v=20260719-11"></script>
 <script src="js/multisig-deploy.js?v=20261009-2"></script>
